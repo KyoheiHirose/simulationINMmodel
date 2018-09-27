@@ -174,7 +174,7 @@ def H(r, dend):
     return gumma * (dend - r) * np.array([1, 1, 0])
 
 
-def numToPhase(phi):
+def num_to_phase(phi):
     if phi == 1:
         return "G2"
     elif phi == 2:
@@ -198,10 +198,13 @@ for i in range(N):
         cells[i].timer = 0
     elif number <= 5.5:
         cells = np.append(cells, Cell(3))
+        z = cells[i].r[2]
+        cells[i].timer = 9 * (domZ - z) / domZ
     else:
         cells = np.append(cells, Cell(4))
+        z = cells[i].r[2]
+        cells[i].timer = 9 * (domZ - z) / domZ
 
-        cells[i].timer = 9
 fig = plt.figure()
 ax = Axes3D(fig)
 
@@ -308,4 +311,5 @@ while t < TIME:
     for i in range(3):
         print(" ")
     t += dt
+
 plt.show()
