@@ -237,29 +237,23 @@ for line in fin:
     init += [re.split(',',line)]
 fin.close()
 
-cells1 = [Cell() for i in range(N)]
-cells2 = [Cell() for i in range(N)]
+cells = [Cell() for i in range(N)]
 
 for i in range(N):
     r0 = float(init[i][0])
     r1 = float(init[i][1])
     r2 = float(init[i][2])
-    cells1[i].r = np.array([r0, r1, r2])
-    cells2[i].r = np.array([r0, r1, r2])
+    cells[i].r = np.array([r0, r1, r2])
     v0 = float(init[i][3])
     v1 = float(init[i][4])
     v2 = float(init[i][5])
-    cells1[i].v = np.array([v0, v1, v2])
-    cells2[i].v = np.array([v0, v1, v2])
+    cells[i].v = np.array([v0, v1, v2])
     phi = float(init[i][6])
-    cells1[i].phi = phi
-    cells2[i].phi = phi
+    cells[i].phi = phi
     timer = float(init[i][7])
-    cells1[i].timer = timer
-    cells2[i].timer = timer
+    cells[i].timer = timer
     timer2 = float(init[i][8])
-    cells1[i].timer2 = timer2
-    cells2[i].timer2 = timer2
+    cells[i].timer2 = timer2
 # fig = plt.figure()
 # ax = Axes3D(fig)
 TIME = 1  # シミュレーションを行う時の長さ
@@ -271,6 +265,8 @@ while t < TIME:
     time += [t]
     t += dt
 
+
+cells1 = copy.deepcopy(cells)
 list1 = [cells1[1].r[2]]
 t = dt
 while t < TIME+0.001:
@@ -291,6 +287,7 @@ while t < TIME+0.001:
     list1 += [cells1[1].r[2]]
     # list1 += [frunge]
 
+cells2 = copy.deepcopy(cells)
 list2 = [cells2[1].r[2]]
 dt1 = 0.01
 t = dt1
@@ -298,7 +295,7 @@ count = 1
 countlist = [10*i for i in range(1,21)]
 while t < TIME+0.001:
     for i in range(len(cells2)):
-        # print("the size of cells2 is ", cells2.shape[0])
+        # print("the size of cells12 is ", cells2.shape[0])
         # runge-kutta法によって次の時刻のr,vを取得
         # 誤差がどこまで影響してくるのかに関しての考察がまだ
 
@@ -316,30 +313,7 @@ while t < TIME+0.001:
     count += 1
     # list1 += [frunge]
 
-list3 = [cells2[1].r[2]]
-dt1 = 0.01
-t = dt1
-count = 1
-countlist = [10*i for i in range(1,21)]
-while t < TIME+0.001:
-    for i in range(len(cells2)):
-        # print("the size of cells2 is ", cells2.shape[0])
-        # runge-kutta法によって次の時刻のr,vを取得
-        # 誤差がどこまで影響してくるのかに関しての考察がまだ
 
-        kb1 = f_int(cells2, cells2[i].r) - V(cells2[i].r, cells2[i].v, cells2[i].phi, cells2[i].timer2) + H(cells2[i].r, cells2[i].dend)
-        kb2 = f_int(cells2, cells2[i].r+dt1/2*kb1) - V(cells2[i].r+dt1/2*kb1, cells2[i].v+dt1/2*kb1, cells2[i].phi, cells2[i].timer2) + H(cells2[i].r+dt1/2*kb1, cells2[i].dend)
-        kb3 = f_int(cells2, cells2[i].r+dt1/2*kb2) - V(cells2[i].r+dt1/2*kb2, cells2[i].v+dt1/2*kb2, cells2[i].phi, cells2[i].timer2) + H(cells2[i].r+dt1/2*kb2, cells2[i].dend)
-        kb4 = f_int(cells2, cells2[i].r+dt1*kb3) - V(cells2[i].r+dt1*kb3, cells2[i].v+dt1*kb3, cells2[i].phi, cells2[i].timer2) + H(cells2[i].r+dt1*kb3, cells2[i].dend)
-        frunge = (kb1+2*kb2+2*kb3+kb4)
-        cells2[i].r += dt1*(kb1+2*kb2+2*kb3+kb4)/6
-        # 細胞の状態を更新
-        cells2[i].calc_next(cells2)
-    t += dt1
-    if count in countlist:
-        list2 += [cells2[1].r[2]]
-    count += 1
-    # list1 += [frunge]
 print(len(time), ',', len(list1), ',', len(list2))
 table = PrettyTable()
 table.add_column('time', time)
