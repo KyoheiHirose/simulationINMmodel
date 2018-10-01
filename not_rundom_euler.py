@@ -11,6 +11,7 @@ import math
 from mpl_toolkits.mplot3d import Axes3D
 import copy
 import re
+from prettytable import PrettyTable
 
 
 # 定数
@@ -139,7 +140,7 @@ class Cell(object):
         elif self.r[1] > domY:
             self.r[1] = self.r[1] - domY
 
-def f_int(vect_r):
+def f_int(cell, vect_r):
     """
     cells[i]に対して相互作用による力をすべて計算
     """
@@ -199,41 +200,9 @@ def num_to_phase(phi):
 
 
 # main
-"""
-cells = np.array([])  # 細胞を生成
-for i in range(N):
-    number = random.random()
-    if number <= 0.1:
-        cells = np.append(cells, Cell(1))
-        cells[i].timer = 0
-    elif number <= 5.5:
-        cells = np.append(cells, Cell(3))
-        z = cells[i].r[2]
-        cells[i].timer = 9 * (domZ - z) / domZ
-    else:
-        cells = np.append(cells, Cell(4))
-        z = cells[i].r[2]
-        cells[i].timer = 9 * (domZ - z) / domZ
-
-# 初期値をファイルに書き込み
-init = ''
-for i in range(cells.shape[0]):
-    init += str(cells[i].r[0]) + ',' \
-            + str(cells[i].r[1]) + ',' \
-            + str(cells[i].r[2]) + ',' \
-            + str(cells[i].v[0]) + ',' \
-            + str(cells[i].v[1]) + ',' \
-            + str(cells[i].v[2]) + ',' \
-            + str(cells[i].phi) + ','\
-            + str(cells[i].timer) + ','\
-            + str(cells[i].timer2) + ',\n'
-fout = open('inits', 'wt')
-fout.write(init)
-fout.close()
-"""
 # 初期値の読み込み
 init = []
-fin = open('inits', 'rt')
+fin = open('inits_set', 'rt')
 for line in fin:
     init += [re.split(',',line)]
 fin.close()
@@ -255,73 +224,62 @@ for i in range(N):
     cells[i].timer = timer
     timer2 = float(init[i][8])
     cells[i].timer2 = timer2
+# fig = plt.figure()
+# ax = Axes3D(fig)
+TIME = 1  # シミュレーションを行う時の長さ
 
-fig = plt.figure()
-ax = Axes3D(fig)
-
-t = 0
+time = [0]
+dt = 0.1
+t = dt
 while t < TIME:
-    for i in range(len(cells)):
-        # print("the size of cells is ", cells.shape[0])
-        # runnge-kutta法によって次の時刻のr,vを取得
-        # 誤差がどこまで影響してくるのかに関しての考察がまだ
-        ft = f_int(cells[i].r) - V(cells[i].r, cells[i].v, cells[i].phi, cells[i].timer2) + H(cells[i].r, cells[i].dend)
-        cells[i].r += dt*ft
-
-        # 細胞の状態を更新
-        cells[i].calc_next(cells)
-
-
-"""
-    # plot
-    print("全細胞数...", len(cells), "分裂回数...")
-    list1 = np.array([[0, 0, 0]])
-    list2 = np.array([[0, 0, 0]])
-    list3 = np.array([[0, 0, 0]])
-    list4 = np.array([[0, 0, 0]])
-    list5 = np.array([[0, 0, 0]])
-    listother = np.array([[0, 0, 0]])
-    # 代表の10個を表示
-    for i in range(len(cells)):  # range(cells.shape[0])で全部randNumで10個
-        if cells[i].phi == 2:  # M期
-            list2 = np.append(list2, [cells[i].r], axis=0)
-        elif cells[i].phi == 1:  # G2
-            list1 = np.append(list1, [cells[i].r], axis=0)
-        elif cells[i].phi == 3:  # early G1
-            list3 = np.append(list3, [cells[i].r], axis=0)
-        elif cells[i].phi == 4:  # late G1
-            list4 = np.append(list4, [cells[i].r], axis=0)
-        elif cells[i].phi == 5:  # S
-            list5 = np.append(list5, [cells[i].r], axis=0)
-        else:
-            listother = np.append(listother, [cells[i].r], axis=0)
-    # 各リストには初期化した分の要素が存在するから要素数はー1
-    print("the number of G1 phase cells is ................", list1.shape[0]-1)
-    print("the number of M phase cells is .................", list2.shape[0]-1)
-    print("the number of early G1 phase cells is ..........", list3.shape[0]-1)
-    print("the number of late G1 phase cells is ...........", list4.shape[0]-1)
-    print("the number of S phase cells is .................", list5.shape[0]-1)
-    print("the number of differentiated cells is ..........", listother.shape[0]-1)
-
-    ax.cla()
-
-    ax.plot(list1[1:, 0], list1[1:, 1], list1[1:, 2], "o", color="orange", ms=8, mew=0.5, label="G2")  # G2 phase
-    ax.plot(list2[1:, 0], list2[1:, 1], list2[1:, 2], "o", color="red", ms=8, mew=0.5, label="M")  # M phase
-    ax.plot(list3[1:, 0], list3[1:, 1], list3[1:, 2], "^", color="magenta", ms=8, mew=0.5, label="early G1")  # early G1
-    ax.plot(list4[1:, 0], list4[1:, 1], list4[1:, 2], "^", color="pink", ms=8, mew=0.5, label="late G1")  # late G1
-    ax.plot(list5[1:, 0], list5[1:, 1], list5[1:, 2], "o", color="deepskyblue", ms=8, mew=0.5, label="S")
-    ax.plot(listother[1:, 0], listother[1:, 1], listother[1:, 2], "o", color="grey", ms=8, mew=0.5, label="differentiated")
-    ax.set_xlim(0, domX)
-    ax.set_ylim(0, domY)
-    ax.set_zlim(0, domZ)
-    ax.set_xlabel("X")
-    ax.set_ylabel("Y")
-    ax.set_zlabel("Z")
-    ax.legend()
-    plt.pause(0.01)
-    for i in range(3):
-        print(" ")
+    time += [t]
     t += dt
 
-plt.show()
-"""
+
+cells1 = copy.deepcopy(cells)
+list1 = [cells1[1].r[2]]
+t = dt
+while t < TIME+0.001:
+    for i in range(len(cells1)):
+        # print("the size of cells1 is ", cells1.shape[0])
+        # runge-kutta法によって次の時刻のr,vを取得
+        # 誤差がどこまで影響してくるのかに関しての考察がまだ
+        ft = f_int(cells1, cells1[i].r) - V(cells1[i].r, cells1[i].v, cells1[i].phi, cells1[i].timer2) + H(cells1[i].r, cells1[i].dend)
+        cells1[i].r += dt*ft
+
+        # 細胞の状態を更新
+        cells1[i].calc_next(cells1)
+    t += dt
+    list1 += [cells1[1].r[2]]
+    # list1 += [frunge]
+
+cells2 = copy.deepcopy(cells)
+list2 = [cells2[1].r[2]]
+dt1 = 0.01
+t = dt1
+count = 1
+countlist = [10*i for i in range(1,21)]
+while t < TIME+0.001:
+    for i in range(len(cells2)):
+        # print("the size of cells22 is ", cells2.shape[0])
+        # runge-kutta法によって次の時刻のr,vを取得
+        # 誤差がどこまで影響してくるのかに関しての考察がまだ
+        ft = f_int(cells2, cells2[i].r) - V(cells2[i].r, cells2[i].v, cells2[i].phi, cells2[i].timer2) + H(cells2[i].r, cells2[i].dend)
+        cells2[i].r += dt*ft
+
+        # 細胞の状態を更新
+        cells2[i].calc_next(cells2)
+    if count in countlist:
+        list2 += [cells2[1].r[2]]
+        print(t)
+    t += dt1
+    count += 1
+    # list1 += [frunge]
+
+
+print(len(time), ',', len(list1), ',', len(list2))
+table = PrettyTable()
+table.add_column('time', time)
+table.add_column('euler dt=0.1', list1)
+table.add_column('euler dt=0.01', list2)
+print(table)

@@ -232,7 +232,7 @@ fout.close()
 """
 # 初期値の読み込み
 init = []
-fin = open('inits', 'rt')
+fin = open('inits_set', 'rt')
 for line in fin:
     init += [re.split(',',line)]
 fin.close()
@@ -307,9 +307,10 @@ while t < TIME+0.001:
         cells2[i].r += dt1*(kb1+2*kb2+2*kb3+kb4)/6
         # 細胞の状態を更新
         cells2[i].calc_next(cells2)
-    t += dt1
     if count in countlist:
         list2 += [cells2[1].r[2]]
+        print(t)
+    t += dt1
     count += 1
     # list1 += [frunge]
 
@@ -318,5 +319,5 @@ print(len(time), ',', len(list1), ',', len(list2))
 table = PrettyTable()
 table.add_column('time', time)
 table.add_column('runge dt=0.1', list1)
-table.add_column('euler dt=0.01', list2)
+table.add_column('runge dt=0.01', list2)
 print(table)
