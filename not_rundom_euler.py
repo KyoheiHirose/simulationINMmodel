@@ -2,7 +2,7 @@
 """
 ルンゲクッタ法を使用
 速度の初期条件を追加
-初期状態がおかしい
+テスト用にランダムな要因を削除
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,6 +10,8 @@ import random
 import math
 from mpl_toolkits.mplot3d import Axes3D
 import copy
+import re
+
 
 # 定数
 R = 10  # 細胞の直径
@@ -22,21 +24,17 @@ beta = 15  # 方程式の定数の指定
 gumma = 4
 TIME = 100  # シミュレーションを行う時の長さ
 V_INIT = 20.0  # 速度の初期値
-randNum = [1,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,99]  # 左の番号のついたものだけをグラフ上に表示
 
 
 class Cell(object):
 
-    def __init__(self, phi):
-        self.phi = phi  # 細胞周期の状態
-        self.r = np.random.rand(3) * np.array([domX, domY, domZ])  # 細胞の座標[0,dom)でランダム
-        if self.phi == 1:
-            self.v = np.array([0., 0., -1*V_INIT*random.uniform(0.9, 1.1)])  # 細胞の速度をV_INITの90~110%でランダムに与える
-        elif self.phi == 3 or self.phi == 4:
-            self.v = np.array([0., 0., V_INIT*random.uniform(0.9, 1.1)])  # 細胞の速度をV_INITの90~110%でランダムに与える
+    def __init__(self):
+        self.phi = 0  # 細胞周期の状態
+        self.r = np.array([0,0,0])  # 細胞の座標[0,dom)でランダム
+        self.v = np.array([0,0,0])  # 細胞の速度をV_INITの90~110%でランダムに与える
         self.timer = 0  # 細胞がその状態でどれだけ時間が経過したか
         self.timer2 = 0  # phi==4の時のみ用いる遅れを表現するタイマー
-        self.dend = copy.deepcopy(self.r)  # 神経突起の位置を定数として保存
+        self.dend = np.array([0,0,0])  # 神経突起の位置を定数として保存
 
     def calc_next(self, cell):
         """
@@ -57,19 +55,21 @@ class Cell(object):
         elif self.phi == 7:  # 領域外にでる
             self.phi7()
 
+        self.border_change()
+
     def phi1(self):
         """G2期の細胞"""
         if self.r[2] < R/2:
             # print("change G2 -> M !!")
             if self.r[2] < 0:
-                self.r[2] = 0
+                self.r[2] = R/2
             self.phi = 2  # G2からMへの移行
-            self.timer = random.random()  # M期の１時間を[0,1)のランダムで指定
+            self.timer = 0.9  # M期の１時間を[0,1)のランダムで指定
 
     def phi2(self):
         """M期の細胞"""
         if self.r[2] < 0:
-            self.r[2] = 0
+            self.r[2] = R/2
         if self.timer > 0:
             self.timer -= dt
         else:
@@ -79,41 +79,28 @@ class Cell(object):
     def phi3(self):
         """G1期(突起あり)の細胞"""
         if self.r[2] < 0:
-            self.r[2] = 0
+            self.r[2] = R/2
         if self.timer > 0:
             self.timer -= dt
         else:
-            number = random.random()  # 確率的に状態を変えるための乱数を生成
-            if number < 0.67:
-                # print("change G1 -> S !!")
-                self.phi = 5
-                self.timer = 4  # S期の4時間を設定
-            else:
-                # print("change G1 -> I'm differentiated !!")
-                self.phi = 7
+            self.timer = 4
+            self.phi = 5
 
     def phi4(self):
         """G1期(突起なし)の細胞"""
         if self.r[2] < 0:
-            self.r[2] = 0
+            self.r[2] = R/2
         if self.timer2 > 0:
             self.timer2 -= dt
         else:
             if self.timer > 0:
                 self.timer -= dt
             else:
-                number = random.random()
-                if number < 0.67:
-                    # print("change G1 -> S !!")
-                    self.phi = 5
-                    self.timer = 4  # S期は時間
-                else:
-                    # print("change G1 -> I'm differentiated !!")
-                    self.phi = 7
-
+                self.timer = 4
+                self.phi = 5
     def phi5(self):
         if self.r[2] < 0:
-            self.r[2] = 0
+            self.r[2] = R/2
         if self.timer > 0:
             self.timer -= dt
         else:
@@ -130,18 +117,27 @@ class Cell(object):
         cell[-1].r -= R / 4 * rad
         cell[-1].v = cell[-1].v * np.array([-1, -1, 1])  # xy方向の速度を逆転
         cell[-1].dend = copy.deepcopy(cell[-1].r)  # 突起の位置を記録
-        cell[-1].timer = 9 + random.uniform(-1, 1)
-        cell[-1].timer2 = random.uniform(0, 3)
+        cell[-1].timer = 9
+        cell[-1].timer2 = 1.5
         # 自分自身の座標を変更して娘細胞となる
         cell[i].phi = 3
         cell[i].r += R / 4 * rad
-        cell[i].timer = 9 + random.uniform(-1, 1)
+        cell[i].timer = 9
         # print("cell was divided")
 
     def phi7(self):
         if self.r[2] < 0:
-            self.r[2] = 0
+            self.r[2] = R/2
 
+    def border_change(self):
+        if self.r[0] < 0:
+            self.r[0] = domX - self.r[0]
+        elif self.r[0] > domX:
+            self.r[0] = self.r[0] - domX
+        if self.r[1] < 0:
+            self.r[1] = domY - self.r[1]
+        elif self.r[1] > domY:
+            self.r[1] = self.r[1] - domY
 
 def f_int(vect_r):
     """
@@ -154,23 +150,9 @@ def f_int(vect_r):
         e_r_ij = r_ij/r_norm
         if 0 < r_norm < R and i != j:  # 計算は細胞間距離がRより小さい場合のみ
             f += (-1)*beta * (R-r_norm) * e_r_ij
-    # 境界条件...箱の中にあるとして境界に接すると反発を受ける係数は細胞と同じ
-    if R/(-2) < vect_r[0] < R/2:
-        r_norm = R/2 + vect_r[0]
-        f += (-1)*beta * (R-r_norm)*np.array([-1, 0, 0])
-    if domX-R/2 < vect_r[0] < domX+R/2:
-        r_norm = domX + R/2 - vect_r[0]
-        f += (-1)*beta * (R-r_norm)*np.array([1, 0, 0])
-    if R/(-2) < vect_r[1] < R/2:
-        r_norm = R/2 + vect_r[1]
-        f += (-1)*beta * (R-r_norm)*np.array([0, -1, 0])
-    if domY-R/2 < vect_r[1] < domY+R/2:
-        r_norm = domY + R/2 - vect_r[1]
-        f += (-1)*beta * (R-r_norm)*np.array([0, 1, 0])
     if R/(-2) < vect_r[2] < R/2:
         r_norm = R/2 + vect_r[2]
-        f += (-1)*beta * (R-r_norm)*np.array([0, 0, 0])
-
+        f += (-1)*beta * (R-r_norm)*np.array([0, 0, 1])
     return f
 
 
@@ -217,6 +199,7 @@ def num_to_phase(phi):
 
 
 # main
+"""
 cells = np.array([])  # 細胞を生成
 for i in range(N):
     number = random.random()
@@ -232,45 +215,66 @@ for i in range(N):
         z = cells[i].r[2]
         cells[i].timer = 9 * (domZ - z) / domZ
 
+# 初期値をファイルに書き込み
+init = ''
+for i in range(cells.shape[0]):
+    init += str(cells[i].r[0]) + ',' \
+            + str(cells[i].r[1]) + ',' \
+            + str(cells[i].r[2]) + ',' \
+            + str(cells[i].v[0]) + ',' \
+            + str(cells[i].v[1]) + ',' \
+            + str(cells[i].v[2]) + ',' \
+            + str(cells[i].phi) + ','\
+            + str(cells[i].timer) + ','\
+            + str(cells[i].timer2) + ',\n'
+fout = open('inits', 'wt')
+fout.write(init)
+fout.close()
+"""
+# 初期値の読み込み
+init = []
+fin = open('inits', 'rt')
+for line in fin:
+    init += [re.split(',',line)]
+fin.close()
+
+cells = [Cell() for i in range(N)]
+
+for i in range(N):
+    r0 = float(init[i][0])
+    r1 = float(init[i][1])
+    r2 = float(init[i][2])
+    cells[i].r = np.array([r0, r1, r2])
+    v0 = float(init[i][3])
+    v1 = float(init[i][4])
+    v2 = float(init[i][5])
+    cells[i].v = np.array([v0, v1, v2])
+    phi = float(init[i][6])
+    cells[i].phi = phi
+    timer = float(init[i][7])
+    cells[i].timer = timer
+    timer2 = float(init[i][8])
+    cells[i].timer2 = timer2
+
 fig = plt.figure()
 ax = Axes3D(fig)
 
 t = 0
 while t < TIME:
-    print("t = ", t)
-    print("=======================START============================")
-    for i in range(cells.shape[0]):
+    for i in range(len(cells)):
         # print("the size of cells is ", cells.shape[0])
         # runnge-kutta法によって次の時刻のr,vを取得
         # 誤差がどこまで影響してくるのかに関しての考察がまだ
-
-        kb1 = f_int(cells[i].r) - V(cells[i].r, cells[i].v, cells[i].phi, cells[i].timer2) + H(cells[i].r, cells[i].dend)
-        kb2 = f_int(cells[i].r+dt/2*kb1) - V(cells[i].r+dt/2*kb1, cells[i].v+dt/2*kb1, cells[i].phi, cells[i].timer2) + H(cells[i].r+dt/2*kb1, cells[i].dend)
-        kb3 = f_int(cells[i].r+dt/2*kb2) - V(cells[i].r+dt/2*kb2, cells[i].v+dt/2*kb2, cells[i].phi, cells[i].timer2) + H(cells[i].r+dt/2*kb2, cells[i].dend)
-        kb4 = f_int(cells[i].r+dt*kb3) - V(cells[i].r+dt*kb3, cells[i].v+dt*kb3, cells[i].phi, cells[i].timer2) + H(cells[i].r+dt*kb3, cells[i].dend)
-        """
-        if i in range(cells.shape[0]) and cells[i].phi == 4:
-            print("I'm NO.", i, "My phase is ", numToPhase(cells[i].phi))
-            print("  f_int = ", f_int(cells[i].r))
-            print("  v = ", V(cells[i].r, cells[i].v, cells[i].phi, cells[i].timer2))
-            print("  kb1 = ", kb1)
-            print("  h = ", H(cells[i].r+dt/2*kb1, cells[i].dend))
-            print("dr = ", dt*(kb1+2*kb2+2*kb3+kb4)/6)
-        """
-        cells[i].r += dt*(kb1+2*kb2+2*kb3+kb4)/6
+        ft = f_int(cells[i].r) - V(cells[i].r, cells[i].v, cells[i].phi, cells[i].timer2) + H(cells[i].r, cells[i].dend)
+        cells[i].r += dt*ft
 
         # 細胞の状態を更新
         cells[i].calc_next(cells)
 
-        """
-        if i in randNum:
-            if cells[i].phi != 7:
-                print("I'm No.", i, "My phase is ", numToPhase(cells[i].phi))
-        """
-    print("=======================END============================")
 
+"""
     # plot
-    print("全細胞数...", cells.shape[0], "分裂回数...")
+    print("全細胞数...", len(cells), "分裂回数...")
     list1 = np.array([[0, 0, 0]])
     list2 = np.array([[0, 0, 0]])
     list3 = np.array([[0, 0, 0]])
@@ -278,7 +282,7 @@ while t < TIME:
     list5 = np.array([[0, 0, 0]])
     listother = np.array([[0, 0, 0]])
     # 代表の10個を表示
-    for i in range(cells.shape[0]):  # range(cells.shape[0])で全部randNumで10個
+    for i in range(len(cells)):  # range(cells.shape[0])で全部randNumで10個
         if cells[i].phi == 2:  # M期
             list2 = np.append(list2, [cells[i].r], axis=0)
         elif cells[i].phi == 1:  # G2
@@ -300,10 +304,11 @@ while t < TIME:
     print("the number of differentiated cells is ..........", listother.shape[0]-1)
 
     ax.cla()
+
     ax.plot(list1[1:, 0], list1[1:, 1], list1[1:, 2], "o", color="orange", ms=8, mew=0.5, label="G2")  # G2 phase
     ax.plot(list2[1:, 0], list2[1:, 1], list2[1:, 2], "o", color="red", ms=8, mew=0.5, label="M")  # M phase
     ax.plot(list3[1:, 0], list3[1:, 1], list3[1:, 2], "^", color="magenta", ms=8, mew=0.5, label="early G1")  # early G1
-    ax.plot(list4[1:, 0], list4[1:, 1], list4[1:, 2], "^", color="black", ms=8, mew=0.5, label="late G1")  # late G1
+    ax.plot(list4[1:, 0], list4[1:, 1], list4[1:, 2], "^", color="pink", ms=8, mew=0.5, label="late G1")  # late G1
     ax.plot(list5[1:, 0], list5[1:, 1], list5[1:, 2], "o", color="deepskyblue", ms=8, mew=0.5, label="S")
     ax.plot(listother[1:, 0], listother[1:, 1], listother[1:, 2], "o", color="grey", ms=8, mew=0.5, label="differentiated")
     ax.set_xlim(0, domX)
@@ -313,9 +318,10 @@ while t < TIME:
     ax.set_ylabel("Y")
     ax.set_zlabel("Z")
     ax.legend()
-    plt.pause(0.0001)
+    plt.pause(0.01)
     for i in range(3):
         print(" ")
     t += dt
 
 plt.show()
+"""

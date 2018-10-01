@@ -11,18 +11,17 @@ import math
 from mpl_toolkits.mplot3d import Axes3D
 import copy
 import re
+from prettytable import PrettyTable
 
 
 # 定数
 R = 10  # 細胞の直径
-dt = 0.1  # 時間幅
 N = 100  # 初期細胞の数
 domX = 20  # 領域の設定
 domY = 20
 domZ = 100
 beta = 15  # 方程式の定数の指定
 gumma = 4
-TIME = 100  # シミュレーションを行う時の長さ
 V_INIT = 20.0  # 速度の初期値
 
 
@@ -139,13 +138,13 @@ class Cell(object):
         elif self.r[1] > domY:
             self.r[1] = self.r[1] - domY
 
-def f_int(vect_r):
+def f_int(cell, vect_r):
     """
     cells[i]に対して相互作用による力をすべて計算
     """
     f = np.zeros(3)
     for j in range(N):
-        r_ij = cells[j].r - vect_r
+        r_ij = cell[j].r - vect_r
         r_norm = np.linalg.norm(r_ij)
         e_r_ij = r_ij/r_norm
         if 0 < r_norm < R and i != j:  # 計算は細胞間距離がRより小さい場合のみ
@@ -238,61 +237,83 @@ for line in fin:
     init += [re.split(',',line)]
 fin.close()
 
-cells = [Cell() for i in range(N)]
+cells1 = [Cell() for i in range(N)]
+cells2 = [Cell() for i in range(N)]
 
 for i in range(N):
     r0 = float(init[i][0])
     r1 = float(init[i][1])
     r2 = float(init[i][2])
-    cells[i].r = np.array([r0, r1, r2])
+    cells1[i].r = np.array([r0, r1, r2])
+    cells2[i].r = np.array([r0, r1, r2])
     v0 = float(init[i][3])
     v1 = float(init[i][4])
     v2 = float(init[i][5])
-    cells[i].v = np.array([v0, v1, v2])
+    cells1[i].v = np.array([v0, v1, v2])
+    cells2[i].v = np.array([v0, v1, v2])
     phi = float(init[i][6])
-    cells[i].phi = phi
+    cells1[i].phi = phi
+    cells2[i].phi = phi
     timer = float(init[i][7])
-    cells[i].timer = timer
+    cells1[i].timer = timer
+    cells2[i].timer = timer
     timer2 = float(init[i][8])
-    cells[i].timer2 = timer2
+    cells1[i].timer2 = timer2
+    cells2[i].timer2 = timer2
+# fig = plt.figure()
+# ax = Axes3D(fig)
+dt = 0.1  # 時間幅
+TIME = 5  # シミュレーションを行う時の長さ
 
-fig = plt.figure()
-ax = Axes3D(fig)
+time = [0]
+list1 = [cells1[1].r[2]]
+list2 = [cells2[1].r[2]]
+t = dt
 
-t = 0
 while t < TIME:
-    print("t = ", t)
-    print("=======================START============================")
-    for i in range(len(cells)):
-        # print("the size of cells is ", cells.shape[0])
-        # runnge-kutta法によって次の時刻のr,vを取得
+    time += [t]
+    t += dt
+
+t = dt
+while t < TIME:
+    for i in range(len(cells1)):
+        # print("the size of cells1 is ", cells1.shape[0])
+        # runge-kutta法によって次の時刻のr,vを取得
         # 誤差がどこまで影響してくるのかに関しての考察がまだ
 
-        kb1 = f_int(cells[i].r) - V(cells[i].r, cells[i].v, cells[i].phi, cells[i].timer2) + H(cells[i].r, cells[i].dend)
-        kb2 = f_int(cells[i].r+dt/2*kb1) - V(cells[i].r+dt/2*kb1, cells[i].v+dt/2*kb1, cells[i].phi, cells[i].timer2) + H(cells[i].r+dt/2*kb1, cells[i].dend)
-        kb3 = f_int(cells[i].r+dt/2*kb2) - V(cells[i].r+dt/2*kb2, cells[i].v+dt/2*kb2, cells[i].phi, cells[i].timer2) + H(cells[i].r+dt/2*kb2, cells[i].dend)
-        kb4 = f_int(cells[i].r+dt*kb3) - V(cells[i].r+dt*kb3, cells[i].v+dt*kb3, cells[i].phi, cells[i].timer2) + H(cells[i].r+dt*kb3, cells[i].dend)
-        """
-        if i in range(cells.shape[0]) and cells[i].phi == 4:
-            print("I'm NO.", i, "My phase is ", numToPhase(cells[i].phi))
-            print("  f_int = ", f_int(cells[i].r))
-            print("  v = ", V(cells[i].r, cells[i].v, cells[i].phi, cells[i].timer2))
-            print("  kb1 = ", kb1)
-            print("  h = ", H(cells[i].r+dt/2*kb1, cells[i].dend))
-            print("dr = ", dt*(kb1+2*kb2+2*kb3+kb4)/6)
-        """
-        cells[i].r += dt*(kb1+2*kb2+2*kb3+kb4)/6
-
+        kb1 = f_int(cells1, cells1[i].r) - V(cells1[i].r, cells1[i].v, cells1[i].phi, cells1[i].timer2) + H(cells1[i].r, cells1[i].dend)
+        kb2 = f_int(cells1, cells1[i].r+dt/2*kb1) - V(cells1[i].r+dt/2*kb1, cells1[i].v+dt/2*kb1, cells1[i].phi, cells1[i].timer2) + H(cells1[i].r+dt/2*kb1, cells1[i].dend)
+        kb3 = f_int(cells1, cells1[i].r+dt/2*kb2) - V(cells1[i].r+dt/2*kb2, cells1[i].v+dt/2*kb2, cells1[i].phi, cells1[i].timer2) + H(cells1[i].r+dt/2*kb2, cells1[i].dend)
+        kb4 = f_int(cells1, cells1[i].r+dt*kb3) - V(cells1[i].r+dt*kb3, cells1[i].v+dt*kb3, cells1[i].phi, cells1[i].timer2) + H(cells1[i].r+dt*kb3, cells1[i].dend)
+        frunge = (kb1+2*kb2+2*kb3+kb4)
+        cells1[i].r += dt*(kb1+2*kb2+2*kb3+kb4)/6
         # 細胞の状態を更新
-        cells[i].calc_next(cells)
+        cells1[i].calc_next(cells1)
+    t += dt
+    list1 += [cells1[1].r[2]]
+    # list1 += [frunge]
 
-        """
-        if i in randNum:
-            if cells[i].phi != 7:
-                print("I'm No.", i, "My phase is ", numToPhase(cells[i].phi))
-        """
-    print("=======================END============================")
+t = dt
+while t < TIME:
+    for i in range(len(cells2)):
+        # print("the size of cells1 is ", cells1.shape[0])
+        # 誤差がどこまで影響してくるのかに関しての考察がまだ
+        ft = f_int(cells2, cells2[i].r) - V(cells2[i].r, cells2[i].v, cells2[i].phi, cells2[i].timer2) + H(cells2[i].r, cells2[i].dend)
+        cells2[i].r += dt*ft
+        # 細胞の状態を更新
+        cells2[i].calc_next(cells2)
+    t += dt
+    list2 += [cells2[1].r[2]]
+    # list2 += [ft]
 
+# print(len(time), ',', len(list1), ',', len(list2))
+table = PrettyTable()
+table.add_column('time',time)
+table.add_column('runge', list1)
+table.add_column('euler', list2)
+print(table)
+
+"""
     # plot
     print("全細胞数...", len(cells), "分裂回数...")
     list1 = np.array([[0, 0, 0]])
@@ -344,3 +365,4 @@ while t < TIME:
     t += dt
 
 plt.show()
+"""
