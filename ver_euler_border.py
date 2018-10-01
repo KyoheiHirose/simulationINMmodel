@@ -29,7 +29,7 @@ class Cell(object):
     def __init__(self, phi):
         self.phi = phi  # 細胞周期の状態
         self.r = np.random.rand(3) * np.array([domX, domY, domZ])  # 細胞の座標[0,dom)でランダム
-        self.v = np.array([0., 0., V_INIT*random.uniform(0.9, 1.1)])  # 細胞の速度をV_INITの90~110%でランダムに与える
+        self.v = np.array([0., 0., V_INIT*random.uniform(0.9, 1.1)]) # 細胞の速度をV_INITの90~110%でランダムに与える
         self.timer = 0  # 細胞がその状態でどれだけ時間が経過したか
         self.timer2 = 0  # phi==4の時のみ用いる遅れを表現するタイマー
         self.dend = copy.deepcopy(self.r)  # 神経突起の位置を定数として保存
@@ -52,7 +52,6 @@ class Cell(object):
             self.phi6(cell)
         elif self.phi == 7:  # 領域外にでる
             self.phi7()
-        self.border_change()
 
     def phi1(self):
         """G2期の細胞"""
@@ -140,16 +139,6 @@ class Cell(object):
         if self.r[2] < 0:
             self.r[2] = 0
 
-    def border_change(self):
-        if self.r[0] < 0:
-            self.r[0] = domX - self.r[0]
-        elif self.r[0] > domX:
-            self.r[0] = self.r[0] - domX
-        if self.r[1] < 0:
-            self.r[1] = domY - self.r[1]
-        elif self.r[1] > domY:
-            self.r[1] = self.r[1] - domY
-
 
 
 def f_int(vect_r):
@@ -163,6 +152,19 @@ def f_int(vect_r):
         e_r_ij = r_ij/r_norm
         if 0 < r_norm < R and i != j:  # 計算は細胞間距離がRより小さい場合のみ
             f += (-1)*beta * (R-r_norm) * e_r_ij
+    # 境界条件...箱の中にあるとして境界に接すると反発を受ける係数は細胞と同じ
+    if R / (-2) < vect_r[0] < R / 2:
+        r_norm = R / 2 + vect_r[0]
+        f += (-1) * beta * (R - r_norm) * np.array([-1, 0, 0])
+    if domX - R / 2 < vect_r[0] < domX + R / 2:
+        r_norm = domX + R / 2 - vect_r[0]
+        f += (-1) * beta * (R - r_norm) * np.array([1, 0, 0])
+    if R / (-2) < vect_r[1] < R / 2:
+        r_norm = R / 2 + vect_r[1]
+        f += (-1) * beta * (R - r_norm) * np.array([0, -1, 0])
+    if domY - R / 2 < vect_r[1] < domY + R / 2:
+        r_norm = domY + R / 2 - vect_r[1]
+        f += (-1) * beta * (R - r_norm) * np.array([0, 1, 0])
     if (-1)*R/2 < vect_r[2] < R/2:
         r_norm = R/2 + vect_r[2]
         f += (-1)*beta * (R-r_norm)*np.array([0, 0, 1])
@@ -218,7 +220,7 @@ for i in range(N):
     if number <= 0.1:
         cells = np.append(cells, Cell(1))
         cells[i].timer = 0
-    elif number <= 5.5:
+    elif number <= 0.55:
         cells = np.append(cells, Cell(3))
         z = cells[i].r[2]
         cells[i].timer = 9 * (domZ - z) / domZ
@@ -241,9 +243,12 @@ while t < TIME:
 
         ft = f_int(cells[i].r) - V(cells[i].r, cells[i].v, cells[i].phi, cells[i].timer2) + H(cells[i].r, cells[i].dend)
         cells[i].r += dt*ft
+        if cells[i].phi==1:
+            print("V = ", V(cells[i].r, cells[i].v, cells[i].phi, cells[i].timer2))
 
         # 細胞の状態を更新
         cells[i].calc_next(cells)
+
     print("=======================END============================")
 
     # plot
