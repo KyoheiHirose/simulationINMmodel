@@ -51,7 +51,7 @@ class Cell(object):
             self.phi4()
         elif self.phi == 5:  # S
             self.phi5()
-        elif self.phi == 6:
+        elif self.phi == 6:  # 細胞分裂
             self.phi6(cell)
         elif self.phi == 7:  # 領域外にでる
             self.phi7()
@@ -99,9 +99,11 @@ class Cell(object):
             else:
                 self.timer = 4
                 self.phi = 5
+
     def phi5(self):
-        if self.r[2] < 0:
-            self.r[2] = R/2
+        """S期"""
+        # if self.r[2] < 0:
+        #     self.r[2] = R/2
         if self.timer > 0:
             self.timer -= dt
         else:
@@ -227,18 +229,21 @@ for i in range(N):
 # fig = plt.figure()
 # ax = Axes3D(fig)
 TIME = 1  # シミュレーションを行う時の長さ
-
+I = 10
 time = [0]
 dt = 0.1
 t = dt
-while t < TIME:
+while t < TIME+0.0001:
     time += [t]
     t += dt
 
-
 cells1 = copy.deepcopy(cells)
-list1 = [cells1[1].r[2]]
+list1 = [cells1[I].r[2]]
+list1phi = [num_to_phase(cells1[I].phi)]
+dt = 0.05
 t = dt
+count = 1
+countlist = [i*2 for i in range(1,11)]
 while t < TIME+0.001:
     for i in range(len(cells1)):
         # print("the size of cells1 is ", cells1.shape[0])
@@ -249,16 +254,22 @@ while t < TIME+0.001:
 
         # 細胞の状態を更新
         cells1[i].calc_next(cells1)
+        if count in countlist:
+            list1 += [cells1[I].r[2]]
+            list1phi += [num_to_phase(cells1[I].phi)]
+
+    count += 1
     t += dt
-    list1 += [cells1[1].r[2]]
+
     # list1 += [frunge]
 
 cells2 = copy.deepcopy(cells)
-list2 = [cells2[1].r[2]]
-dt1 = 0.01
-t = dt1
+list2 = [cells2[I].r[2]]
+list2phi = [num_to_phase(cells2[I].phi)]
+dt = 0.01
+t = dt
 count = 1
-countlist = [10*i for i in range(1,21)]
+countlist = [10*i for i in range(1,11)]
 while t < TIME+0.001:
     for i in range(len(cells2)):
         # print("the size of cells22 is ", cells2.shape[0])
@@ -270,16 +281,19 @@ while t < TIME+0.001:
         # 細胞の状態を更新
         cells2[i].calc_next(cells2)
     if count in countlist:
-        list2 += [cells2[1].r[2]]
-        print(t)
-    t += dt1
+        list2 += [cells2[I].r[2]]
+        list2phi += [num_to_phase(cells2[I].phi)]
+
+    t += dt
     count += 1
     # list1 += [frunge]
 
+print(len(time), len(list1), len(list2))
 
-print(len(time), ',', len(list1), ',', len(list2))
 table = PrettyTable()
 table.add_column('time', time)
 table.add_column('euler dt=0.1', list1)
 table.add_column('euler dt=0.01', list2)
+table.add_column('cell phase left', list1phi)
+table.add_column('cell phase right', list2phi)
 print(table)

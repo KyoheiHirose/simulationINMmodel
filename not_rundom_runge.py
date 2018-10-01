@@ -257,7 +257,7 @@ for i in range(N):
 # fig = plt.figure()
 # ax = Axes3D(fig)
 TIME = 1  # シミュレーションを行う時の長さ
-
+I = 10  # 表示する細胞のindex
 time = [0]
 dt = 0.1
 t = dt
@@ -267,7 +267,7 @@ while t < TIME:
 
 
 cells1 = copy.deepcopy(cells)
-list1 = [cells1[1].r[2]]
+list1 = [cells1[I].r[2]]
 t = dt
 while t < TIME+0.001:
     for i in range(len(cells1)):
@@ -284,11 +284,11 @@ while t < TIME+0.001:
         # 細胞の状態を更新
         cells1[i].calc_next(cells1)
     t += dt
-    list1 += [cells1[1].r[2]]
+    list1 += [cells1[I].r[2]]
     # list1 += [frunge]
 
 cells2 = copy.deepcopy(cells)
-list2 = [cells2[1].r[2]]
+list2 = [cells2[I].r[2]]
 dt1 = 0.01
 t = dt1
 count = 1
@@ -308,7 +308,7 @@ while t < TIME+0.001:
         # 細胞の状態を更新
         cells2[i].calc_next(cells2)
     if count in countlist:
-        list2 += [cells2[1].r[2]]
+        list2 += [cells2[I].r[2]]
         print(t)
     t += dt1
     count += 1
