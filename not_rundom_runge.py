@@ -1,6 +1,8 @@
 # coding=utf-8
 """
 ルンゲクッタ法を使用
+うまく機能していない可能性が高い
+誤差が４次で収束していない
 速度の初期条件を追加
 テスト用にランダムな要因を削除
 """
@@ -257,67 +259,89 @@ for i in range(N):
 # fig = plt.figure()
 # ax = Axes3D(fig)
 TIME = 1  # シミュレーションを行う時の長さ
-I = 10  # 表示する細胞のindex
+I = 10
 time = [0]
 dt = 0.1
 t = dt
-while t < TIME:
+while t < TIME+0.0001:
     time += [t]
     t += dt
 
-
 cells1 = copy.deepcopy(cells)
 list1 = [cells1[I].r[2]]
+dt = 0.02
 t = dt
+count = 1
+countlist = [5*i for i in range(1,11)]
 while t < TIME+0.001:
     for i in range(len(cells1)):
-        # print("the size of cells1 is ", cells1.shape[0])
-        # runge-kutta法によって次の時刻のr,vを取得
-        # 誤差がどこまで影響してくるのかに関しての考察がまだ
-
         kb1 = f_int(cells1, cells1[i].r) - V(cells1[i].r, cells1[i].v, cells1[i].phi, cells1[i].timer2) + H(cells1[i].r, cells1[i].dend)
         kb2 = f_int(cells1, cells1[i].r+dt/2*kb1) - V(cells1[i].r+dt/2*kb1, cells1[i].v+dt/2*kb1, cells1[i].phi, cells1[i].timer2) + H(cells1[i].r+dt/2*kb1, cells1[i].dend)
         kb3 = f_int(cells1, cells1[i].r+dt/2*kb2) - V(cells1[i].r+dt/2*kb2, cells1[i].v+dt/2*kb2, cells1[i].phi, cells1[i].timer2) + H(cells1[i].r+dt/2*kb2, cells1[i].dend)
         kb4 = f_int(cells1, cells1[i].r+dt*kb3) - V(cells1[i].r+dt*kb3, cells1[i].v+dt*kb3, cells1[i].phi, cells1[i].timer2) + H(cells1[i].r+dt*kb3, cells1[i].dend)
-        frunge = (kb1+2*kb2+2*kb3+kb4)
+        # frunge = (kb1+2*kb2+2*kb3+kb4)
         cells1[i].r += dt*(kb1+2*kb2+2*kb3+kb4)/6
-        # 細胞の状態を更新
         cells1[i].calc_next(cells1)
+    if count in countlist:
+        list1 += [cells1[I].r[2]]
+    count += 1
     t += dt
-    list1 += [cells1[I].r[2]]
-    # list1 += [frunge]
 
+    # list1 += [frunge]
+print('first step end')
 cells2 = copy.deepcopy(cells)
 list2 = [cells2[I].r[2]]
-dt1 = 0.01
-t = dt1
+list2phi = [num_to_phase(cells2[I].phi)]
+dt = 0.01
+t = dt
 count = 1
-countlist = [10*i for i in range(1,21)]
+countlist = [10*i for i in range(1,11)]
 while t < TIME+0.001:
     for i in range(len(cells2)):
-        # print("the size of cells12 is ", cells2.shape[0])
-        # runge-kutta法によって次の時刻のr,vを取得
-        # 誤差がどこまで影響してくるのかに関しての考察がまだ
-
         kb1 = f_int(cells2, cells2[i].r) - V(cells2[i].r, cells2[i].v, cells2[i].phi, cells2[i].timer2) + H(cells2[i].r, cells2[i].dend)
-        kb2 = f_int(cells2, cells2[i].r+dt1/2*kb1) - V(cells2[i].r+dt1/2*kb1, cells2[i].v+dt1/2*kb1, cells2[i].phi, cells2[i].timer2) + H(cells2[i].r+dt1/2*kb1, cells2[i].dend)
-        kb3 = f_int(cells2, cells2[i].r+dt1/2*kb2) - V(cells2[i].r+dt1/2*kb2, cells2[i].v+dt1/2*kb2, cells2[i].phi, cells2[i].timer2) + H(cells2[i].r+dt1/2*kb2, cells2[i].dend)
-        kb4 = f_int(cells2, cells2[i].r+dt1*kb3) - V(cells2[i].r+dt1*kb3, cells2[i].v+dt1*kb3, cells2[i].phi, cells2[i].timer2) + H(cells2[i].r+dt1*kb3, cells2[i].dend)
-        frunge = (kb1+2*kb2+2*kb3+kb4)
-        cells2[i].r += dt1*(kb1+2*kb2+2*kb3+kb4)/6
-        # 細胞の状態を更新
+        kb2 = f_int(cells2, cells2[i].r+dt/2*kb1) - V(cells2[i].r+dt/2*kb1, cells2[i].v+dt/2*kb1, cells2[i].phi, cells2[i].timer2) + H(cells2[i].r+dt/2*kb1, cells2[i].dend)
+        kb3 = f_int(cells2, cells2[i].r+dt/2*kb2) - V(cells2[i].r+dt/2*kb2, cells2[i].v+dt/2*kb2, cells2[i].phi, cells2[i].timer2) + H(cells2[i].r+dt/2*kb2, cells2[i].dend)
+        kb4 = f_int(cells2, cells2[i].r+dt*kb3) - V(cells2[i].r+dt*kb3, cells2[i].v+dt*kb3, cells2[i].phi, cells2[i].timer2) + H(cells2[i].r+dt*kb3, cells2[i].dend)
+        # frunge = (kb1+2*kb2+2*kb3+kb4)
+        cells2[i].r += dt*(kb1+2*kb2+2*kb3+kb4)/6
         cells2[i].calc_next(cells2)
     if count in countlist:
         list2 += [cells2[I].r[2]]
-        print(t)
-    t += dt1
+    t += dt
     count += 1
     # list1 += [frunge]
 
+cells3 = copy.deepcopy(cells)
+list3 = [cells3[I].r[2]]
+dt = 0.005
+t = dt
+count = 1
+countlist = [20*i for i in range(1,11)]
+while t < TIME+0.001:
+    for i in range(len(cells3)):
+        kb1 = f_int(cells3, cells3[i].r) - V(cells3[i].r, cells3[i].v, cells3[i].phi, cells3[i].timer2) + H(cells3[i].r, cells3[i].dend)
+        kb2 = f_int(cells3, cells3[i].r+dt/2*kb1) - V(cells3[i].r+dt/2*kb1, cells3[i].v+dt/2*kb1, cells3[i].phi, cells3[i].timer2) + H(cells3[i].r+dt/2*kb1, cells3[i].dend)
+        kb3 = f_int(cells3, cells3[i].r+dt/2*kb2) - V(cells3[i].r+dt/2*kb2, cells3[i].v+dt/2*kb2, cells3[i].phi, cells3[i].timer2) + H(cells3[i].r+dt/2*kb2, cells3[i].dend)
+        kb4 = f_int(cells3, cells3[i].r+dt*kb3) - V(cells3[i].r+dt*kb3, cells3[i].v+dt*kb3, cells3[i].phi, cells3[i].timer2) + H(cells3[i].r+dt*kb3, cells3[i].dend)
+        # frunge = (kb1+2*kb2+2*kb3+kb4)
+        cells3[i].r += dt*(kb1+2*kb2+2*kb3+kb4)/6
+        cells3[i].calc_next(cells3)
+    if count in countlist:
+        list3 += [cells3[I].r[2]]
+    t += dt
+    count += 1
 
-print(len(time), ',', len(list1), ',', len(list2))
+list4 = []
+list5 = []
+for i in range(len(list1)):
+    list4 += [list1[i] - list2[i]]
+    list5 += [list2[i] - list3[i]]
+
 table = PrettyTable()
 table.add_column('time', time)
-table.add_column('runge dt=0.1', list1)
-table.add_column('runge dt=0.01', list2)
+table.add_column('runge dt = 0.02', list1)
+table.add_column('runge dt = 0.01', list2)
+table.add_column('runge dt = 0.005', list3)
+table.add_column('dt=0.01の誤差', list4)
+table.add_column('dt=0.005の誤差', list5)
 print(table)

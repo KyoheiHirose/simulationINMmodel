@@ -239,11 +239,10 @@ while t < TIME+0.0001:
 
 cells1 = copy.deepcopy(cells)
 list1 = [cells1[I].r[2]]
-list1phi = [num_to_phase(cells1[I].phi)]
-dt = 0.05
+dt = 0.02
 t = dt
 count = 1
-countlist = [i*2 for i in range(1,11)]
+countlist = [5*i for i in range(1,11)]
 while t < TIME+0.001:
     for i in range(len(cells1)):
         # print("the size of cells1 is ", cells1.shape[0])
@@ -254,10 +253,8 @@ while t < TIME+0.001:
 
         # 細胞の状態を更新
         cells1[i].calc_next(cells1)
-        if count in countlist:
-            list1 += [cells1[I].r[2]]
-            list1phi += [num_to_phase(cells1[I].phi)]
-
+    if count in countlist:
+        list1 += [cells1[I].r[2]]
     count += 1
     t += dt
 
@@ -282,18 +279,37 @@ while t < TIME+0.001:
         cells2[i].calc_next(cells2)
     if count in countlist:
         list2 += [cells2[I].r[2]]
-        list2phi += [num_to_phase(cells2[I].phi)]
-
     t += dt
     count += 1
     # list1 += [frunge]
 
-print(len(time), len(list1), len(list2))
+cells3 = copy.deepcopy(cells)
+list3 = [cells3[I].r[2]]
+dt = 0.005
+t = dt
+count = 1
+countlist = [20*i for i in range(1,11)]
+while t < TIME+0.001:
+    for i in range(len(cells3)):
+        ft = f_int(cells3, cells3[i].r) - V(cells3[i].r, cells3[i].v, cells3[i].phi, cells3[i].timer2) + H(cells3[i].r, cells3[i].dend)
+        cells3[i].r += dt*ft
+        cells3[i].calc_next(cells3)
+    if count in countlist:
+        list3 += [cells3[I].r[2]]
+    t += dt
+    count += 1
+
+list4 = []
+list5 = []
+for i in range(len(list1)):
+    list4 += [list1[i] - list2[i]]
+    list5 += [list2[i] - list3[i]]
 
 table = PrettyTable()
 table.add_column('time', time)
-table.add_column('euler dt=0.1', list1)
-table.add_column('euler dt=0.01', list2)
-table.add_column('cell phase left', list1phi)
-table.add_column('cell phase right', list2phi)
+table.add_column('euler dt = 0.02', list1)
+table.add_column('euler dt = 0.01', list2)
+table.add_column('euler dt = 0.005', list3)
+table.add_column('dt=0.01の誤差', list4)
+table.add_column('dt=0.005の誤差', list5)
 print(table)

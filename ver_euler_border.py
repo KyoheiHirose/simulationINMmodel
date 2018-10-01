@@ -12,7 +12,7 @@ import copy
 
 # 定数
 R = 10  # 細胞の直径
-dt = 0.1  # 時間幅
+dt = 0.01  # 時間幅
 N = 100  # 初期細胞の数
 domX = 20  # 領域の設定
 domY = 20
@@ -58,15 +58,15 @@ class Cell(object):
         """G2期の細胞"""
         if self.r[2] < R/2:
             # print("change G2 -> M !!")
-            if self.r[2] < 0:
+            if self.r[2] < R/2:
                 self.r[2] = R/2
             self.phi = 2  # G2からMへの移行
             self.timer = random.random()  # M期の１時間を[0,1)のランダムで指定
 
     def phi2(self):
         """M期の細胞"""
-        if self.r[2] < 0:
-            self.r[2] = 0
+        self.r[2] = R/2  # apical面に拘束
+        self.v[2] = 0  # z方向の速度を消去
         if self.timer > 0:
             self.timer -= dt
         else:
@@ -76,7 +76,7 @@ class Cell(object):
     def phi3(self):
         """G1期(突起あり)の細胞"""
         if self.r[2] < 0:
-            self.r[2] = 0
+            self.r[2] = R/2
         if self.timer > 0:
             self.timer -= dt
         else:
@@ -92,8 +92,9 @@ class Cell(object):
     def phi4(self):
         """G1期(突起なし)の細胞"""
         if self.r[2] < 0:
-            self.r[2] = 0
+            self.r[2] = R/2
         if self.timer2 > 0:
+            self.r[2] = R/2
             self.timer2 -= dt
         else:
             if self.timer > 0:
@@ -110,7 +111,7 @@ class Cell(object):
 
     def phi5(self):
         if self.r[2] < 0:
-            self.r[2] = 0
+            self.r[2] = R/2
         if self.timer > 0:
             self.timer -= dt
         else:
@@ -127,8 +128,8 @@ class Cell(object):
         cell[-1].r -= R / 4 * rad
         cell[-1].v = cell[-1].v * np.array([-1, -1, 1])  # xy方向の速度を逆転
         cell[-1].dend = copy.deepcopy(cell[-1].r)  # 突起の位置を記録
-        cell[-1].timer = 9 + random.uniform(-1, 1)
         cell[-1].timer2 = random.uniform(0, 3)
+        cell[-1].timer = 9 + random.uniform(-1, 1) - cell[-1].timer2
         # 自分自身の座標を変更して娘細胞となる
         cell[i].phi = 3
         cell[i].r += R / 4 * rad
@@ -162,6 +163,9 @@ def f_int(vect_r):
         e_r_ij = r_ij/r_norm
         if 0 < r_norm < R and i != j:  # 計算は細胞間距離がRより小さい場合のみ
             f += (-1)*beta * (R-r_norm) * e_r_ij
+    if (-1)*R/2 < vect_r[2] < R/2:
+        r_norm = R/2 + vect_r[2]
+        f += (-1)*beta * (R-r_norm)*np.array([0, 0, 1])
     return f
 
 
@@ -170,7 +174,7 @@ def V(r, v, phi, timer2):
     if phi == 1:
         v_phi = 8.5
     elif phi == 3:
-        if r[2] < 15:
+        if r[2] < 10 + R/2:
             v_phi = -1.6
         else:
             v_phi = 0
@@ -178,8 +182,8 @@ def V(r, v, phi, timer2):
         if timer2 > 0:  # timer2>0の時は推進力は押さえ込まれてる
             v_phi = 0
         else:
-            if r[2] < 15:
-                v_phi = -1.6  # 半分にした方が自然ではない????????????????????????????????
+            if r[2] < 10 + R/2:
+                v_phi = -1.6
             else:
                 v_phi = 0
     else:
@@ -232,29 +236,14 @@ while t < TIME:
     print("=======================START============================")
     for i in range(cells.shape[0]):
         # print("the size of cells is ", cells.shape[0])
-        # runnge-kutta法によって次の時刻のr,vを取得
-        # 誤差がどこまで影響してくるのかに関しての考察がまだ
+        # euler法によって次の時刻のrを取得
+        # 誤差が1次で収束することを確認済み
 
         ft = f_int(cells[i].r) - V(cells[i].r, cells[i].v, cells[i].phi, cells[i].timer2) + H(cells[i].r, cells[i].dend)
-        """
-        if i in range(cells.shape[0]) and cells[i].phi == 4:
-            print("I'm NO.", i, "My phase is ", numToPhase(cells[i].phi))
-            print("  f_int = ", f_int(cells[i].r))
-            print("  v = ", V(cells[i].r, cells[i].v, cells[i].phi, cells[i].timer2))
-            print("  kb1 = ", kb1)
-            print("  h = ", H(cells[i].r+dt/2*kb1, cells[i].dend))
-            print("dr = ", dt*(kb1+2*kb2+2*kb3+kb4)/6)
-        """
         cells[i].r += dt*ft
 
         # 細胞の状態を更新
         cells[i].calc_next(cells)
-
-        """
-        if i in randNum:
-            if cells[i].phi != 7:
-                print("I'm No.", i, "My phase is ", numToPhase(cells[i].phi))
-        """
     print("=======================END============================")
 
     # plot
