@@ -29,13 +29,13 @@ V_INIT = 20.0  # 速度の初期値
 
 class Cell(object):
 
-    def __init__(self):
-        self.phi = 0  # 細胞周期の状態
-        self.r = np.array([0,0,0])  # 細胞の座標[0,dom)でランダム
-        self.v = np.array([0,0,0])  # 細胞の速度をV_INITの90~110%でランダムに与える
+    def __init__(self,phi):
+        self.phi = phi  # 細胞周期の状態
+        self.r = np.random.rand(3) * np.array([domX, domY, domZ])  # 細胞の座標[0,dom)でランダム
+        self.v = np.array([0., 0., V_INIT*random.uniform(0.9, 1.1)])  # 細胞の速度をV_INITの90~110%でランダムに与える
         self.timer = 0  # 細胞がその状態でどれだけ時間が経過したか
         self.timer2 = 0  # phi==4の時のみ用いる遅れを表現するタイマー
-        self.dend = np.array([0,0,0])  # 神経突起の位置を定数として保存
+        self.dend = copy.deepcopy(self.r)  # 神経突起の位置を定数として保存
 
     def calc_next(self, cell):
         """
@@ -200,14 +200,14 @@ def num_to_phase(phi):
 
 
 # main
-"""
+
 cells = np.array([])  # 細胞を生成
 for i in range(N):
     number = random.random()
     if number <= 0.1:
         cells = np.append(cells, Cell(1))
         cells[i].timer = 0
-    elif number <= 5.5:
+    elif number <= 0.55:
         cells = np.append(cells, Cell(3))
         z = cells[i].r[2]
         cells[i].timer = 9 * (domZ - z) / domZ
@@ -228,7 +228,7 @@ for i in range(cells.shape[0]):
             + str(cells[i].phi) + ','\
             + str(cells[i].timer) + ','\
             + str(cells[i].timer2) + ',\n'
-fout = open('inits', 'wt')
+fout = open('inits_set', 'wt')
 fout.write(init)
 fout.close()
 """
@@ -345,3 +345,4 @@ table.add_column('runge dt = 0.005', list3)
 table.add_column('dt=0.01の誤差', list4)
 table.add_column('dt=0.005の誤差', list5)
 print(table)
+"""

@@ -1,8 +1,7 @@
 # coding=utf-8
 """
-ルンゲクッタ法を使用
-速度の初期条件を追加
-初期状態がおかしい
+オイラー法を使用
+
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -13,13 +12,13 @@ import copy
 
 # 定数
 R = 10  # 細胞の直径
-dt = 0.1  # 時間幅
+dt = 0.01  # 時間幅
 N = 100  # 初期細胞の数
 domX = 20  # 領域の設定
 domY = 20
 domZ = 100
-beta = 15  # 方程式の定数の指定
-gumma = 4
+BETA = 15  # 方程式の定数の指定
+GAMMA = 4
 TIME = 100  # シミュレーションを行う時の長さ
 V_INIT = 20.0  # 速度の初期値
 randNum = [1,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,99]  # 左の番号のついたものだけをグラフ上に表示
@@ -30,7 +29,7 @@ class Cell(object):
     def __init__(self, phi):
         self.phi = phi  # 細胞周期の状態
         self.r = np.random.rand(3) * np.array([domX, domY, domZ])  # 細胞の座標[0,dom)でランダム
-        self.v = np.array([0., 0., V_INIT*random.uniform(0.9, 1.1)])  # 細胞の速度をV_INITの90~110%でランダムに与える
+        self.v = np.array([0., 0., V_INIT*random.uniform(0.9, 1.1)]) # 細胞の速度をV_INITの90~110%でランダムに与える
         self.timer = 0  # 細胞がその状態でどれだけ時間が経過したか
         self.timer2 = 0  # phi==4の時のみ用いる遅れを表現するタイマー
         self.dend = copy.deepcopy(self.r)  # 神経突起の位置を定数として保存
@@ -58,15 +57,15 @@ class Cell(object):
         """G2期の細胞"""
         if self.r[2] < R/2:
             # print("change G2 -> M !!")
-            if self.r[2] < 0:
-                self.r[2] = 0
+            if self.r[2] < R/2:
+                self.r[2] = R/2
             self.phi = 2  # G2からMへの移行
             self.timer = random.random()  # M期の１時間を[0,1)のランダムで指定
 
     def phi2(self):
         """M期の細胞"""
-        if self.r[2] < 0:
-            self.r[2] = 0
+        self.r[2] = R/2  # apical面に拘束
+        self.v[2] = 0  # z方向の速度を消去
         if self.timer > 0:
             self.timer -= dt
         else:
@@ -76,7 +75,7 @@ class Cell(object):
     def phi3(self):
         """G1期(突起あり)の細胞"""
         if self.r[2] < 0:
-            self.r[2] = 0
+            self.r[2] = R/2
         if self.timer > 0:
             self.timer -= dt
         else:
@@ -92,8 +91,9 @@ class Cell(object):
     def phi4(self):
         """G1期(突起なし)の細胞"""
         if self.r[2] < 0:
-            self.r[2] = 0
+            self.r[2] = R/2
         if self.timer2 > 0:
+            self.r[2] = R/2
             self.timer2 -= dt
         else:
             if self.timer > 0:
@@ -110,7 +110,7 @@ class Cell(object):
 
     def phi5(self):
         if self.r[2] < 0:
-            self.r[2] = 0
+            self.r[2] = R/2
         if self.timer > 0:
             self.timer -= dt
         else:
@@ -127,8 +127,8 @@ class Cell(object):
         cell[-1].r -= R / 4 * rad
         cell[-1].v = cell[-1].v * np.array([-1, -1, 1])  # xy方向の速度を逆転
         cell[-1].dend = copy.deepcopy(cell[-1].r)  # 突起の位置を記録
-        cell[-1].timer = 9 + random.uniform(-1, 1)
         cell[-1].timer2 = random.uniform(0, 3)
+        cell[-1].timer = 9 + random.uniform(-1, 1) - cell[-1].timer2
         # 自分自身の座標を変更して娘細胞となる
         cell[i].phi = 3
         cell[i].r += R / 4 * rad
@@ -140,7 +140,8 @@ class Cell(object):
             self.r[2] = 0
 
 
-def f_int(vect_r):
+
+def f_int(cells, vect_r):
     """
     cells[i]に対して相互作用による力をすべて計算
     """
@@ -150,24 +151,23 @@ def f_int(vect_r):
         r_norm = np.linalg.norm(r_ij)
         e_r_ij = r_ij/r_norm
         if 0 < r_norm < R and i != j:  # 計算は細胞間距離がRより小さい場合のみ
-            f += (-1)*beta * (R-r_norm) * e_r_ij
+            f += (-1)*BETA * (R-r_norm) * e_r_ij
     # 境界条件...箱の中にあるとして境界に接すると反発を受ける係数は細胞と同じ
-    if R/(-2) < vect_r[0] < R/2:
-        r_norm = R/2 + vect_r[0]
-        f += (-1)*beta * (R-r_norm)*np.array([-1, 0, 0])
-    if domX-R/2 < vect_r[0] < domX+R/2:
-        r_norm = domX + R/2 - vect_r[0]
-        f += (-1)*beta * (R-r_norm)*np.array([1, 0, 0])
-    if R/(-2) < vect_r[1] < R/2:
-        r_norm = R/2 + vect_r[1]
-        f += (-1)*beta * (R-r_norm)*np.array([0, -1, 0])
-    if domY-R/2 < vect_r[1] < domY+R/2:
-        r_norm = domY + R/2 - vect_r[1]
-        f += (-1)*beta * (R-r_norm)*np.array([0, 1, 0])
-    if R/(-2) < vect_r[2] < R/2:
+    if R / (-2) < vect_r[0] < R / 2:
+        r_norm = R / 2 + vect_r[0]
+        f += (-1) * BETA * (R - r_norm) * np.array([-1, 0, 0])
+    if domX - R / 2 < vect_r[0] < domX + R / 2:
+        r_norm = domX + R / 2 - vect_r[0]
+        f += (-1) * BETA * (R - r_norm) * np.array([1, 0, 0])
+    if R / (-2) < vect_r[1] < R / 2:
+        r_norm = R / 2 + vect_r[1]
+        f += (-1) * BETA * (R - r_norm) * np.array([0, -1, 0])
+    if domY - R / 2 < vect_r[1] < domY + R / 2:
+        r_norm = domY + R / 2 - vect_r[1]
+        f += (-1) * BETA * (R - r_norm) * np.array([0, 1, 0])
+    if (-1)*R/2 < vect_r[2] < R/2:
         r_norm = R/2 + vect_r[2]
-        f += (-1)*beta * (R-r_norm)*np.array([0, 0, 0])
-
+        f += (-1)*BETA * (R-r_norm)*np.array([0, 0, 0])
     return f
 
 
@@ -176,18 +176,18 @@ def V(r, v, phi, timer2):
     if phi == 1:
         v_phi = 8.5
     elif phi == 3:
-        if r[2] < 15:
+        if r[2] < 10 + R/2:
             v_phi = -1.6
         else:
-            v_phi = 0
+            v_phi = -0.5
     elif phi == 4:
         if timer2 > 0:  # timer2>0の時は推進力は押さえ込まれてる
             v_phi = 0
         else:
-            if r[2] < 15:
-                v_phi = -1.6  # 半分にした方が自然ではない????????????????????????????????
+            if r[2] < 10 + R/2:
+                v_phi = -1.6
             else:
-                v_phi = 0
+                v_phi = -0.5
     else:
         v_phi = 0
     e_z = np.array([0, 0, 1])
@@ -195,7 +195,7 @@ def V(r, v, phi, timer2):
 
 
 def H(r, dend):
-    return gumma * (dend - r) * np.array([1, 1, 0])
+    return GAMMA * (dend - r) * np.array([1, 1, 0])
 
 
 def num_to_phase(phi):
@@ -220,7 +220,7 @@ for i in range(N):
     if number <= 0.1:
         cells = np.append(cells, Cell(1))
         cells[i].timer = 0
-    elif number <= 5.5:
+    elif number <= 0.55:
         cells = np.append(cells, Cell(3))
         z = cells[i].r[2]
         cells[i].timer = 9 * (domZ - z) / domZ
@@ -238,32 +238,22 @@ while t < TIME:
     print("=======================START============================")
     for i in range(cells.shape[0]):
         # print("the size of cells is ", cells.shape[0])
-        # runnge-kutta法によって次の時刻のr,vを取得
-        # 誤差がどこまで影響してくるのかに関しての考察がまだ
+        # euler法によって次の時刻のrを取得
+        # 誤差が1次で収束することを確認済み
 
-        kb1 = f_int(cells[i].r) - V(cells[i].r, cells[i].v, cells[i].phi, cells[i].timer2) + H(cells[i].r, cells[i].dend)
-        kb2 = f_int(cells[i].r+dt/2*kb1) - V(cells[i].r+dt/2*kb1, cells[i].v+dt/2*kb1, cells[i].phi, cells[i].timer2) + H(cells[i].r+dt/2*kb1, cells[i].dend)
-        kb3 = f_int(cells[i].r+dt/2*kb2) - V(cells[i].r+dt/2*kb2, cells[i].v+dt/2*kb2, cells[i].phi, cells[i].timer2) + H(cells[i].r+dt/2*kb2, cells[i].dend)
-        kb4 = f_int(cells[i].r+dt*kb3) - V(cells[i].r+dt*kb3, cells[i].v+dt*kb3, cells[i].phi, cells[i].timer2) + H(cells[i].r+dt*kb3, cells[i].dend)
-        """
-        if i in range(cells.shape[0]) and cells[i].phi == 4:
-            print("I'm NO.", i, "My phase is ", numToPhase(cells[i].phi))
-            print("  f_int = ", f_int(cells[i].r))
-            print("  v = ", V(cells[i].r, cells[i].v, cells[i].phi, cells[i].timer2))
-            print("  kb1 = ", kb1)
-            print("  h = ", H(cells[i].r+dt/2*kb1, cells[i].dend))
-            print("dr = ", dt*(kb1+2*kb2+2*kb3+kb4)/6)
-        """
-        cells[i].r += dt*(kb1+2*kb2+2*kb3+kb4)/6
+        if cells[i].phi ==1:
+            ft = (f_int(cells, cells[i].r) + H(cells[i].r, cells[i].dend))*np.array([1, 1, 10/95])
+        elif (cells[i].phi == 3 or cells[i].phi ==4) and cells[i].r[2] < R/2+10:
+            ft = (f_int(cells, cells[i].r) + H(cells[i].r, cells[i].dend))*np.array([1, 1, -10/6])
+        else:
+            ft = f_int(cells, cells[i].r) + H(cells[i].r, cells[i].dend)
+        cells[i].r += dt*ft
+        if cells[i].phi==1:
+            print("V = ", V(cells[i].r, cells[i].v, cells[i].phi, cells[i].timer2))
 
         # 細胞の状態を更新
         cells[i].calc_next(cells)
 
-        """
-        if i in randNum:
-            if cells[i].phi != 7:
-                print("I'm No.", i, "My phase is ", numToPhase(cells[i].phi))
-        """
     print("=======================END============================")
 
     # plot
@@ -275,11 +265,11 @@ while t < TIME:
     list5 = np.array([[0, 0, 0]])
     listother = np.array([[0, 0, 0]])
     # 代表の10個を表示
-    for i in range(cells.shape[0]):  # range(cells.shape[0])で全部randNumで10個
-        if cells[i].phi == 2:  # M期
-            list2 = np.append(list2, [cells[i].r], axis=0)
-        elif cells[i].phi == 1:  # G2
+    for i in [1,15]:  # range(cells.shape[0])で全部len(randNum)で10個
+        if cells[i].phi == 1:  # M期
             list1 = np.append(list1, [cells[i].r], axis=0)
+        elif cells[i].phi == 2:  # G2
+            list2 = np.append(list2, [cells[i].r], axis=0)
         elif cells[i].phi == 3:  # early G1
             list3 = np.append(list3, [cells[i].r], axis=0)
         elif cells[i].phi == 4:  # late G1
@@ -300,7 +290,7 @@ while t < TIME:
     ax.plot(list1[1:, 0], list1[1:, 1], list1[1:, 2], "o", color="orange", ms=8, mew=0.5, label="G2")  # G2 phase
     ax.plot(list2[1:, 0], list2[1:, 1], list2[1:, 2], "o", color="red", ms=8, mew=0.5, label="M")  # M phase
     ax.plot(list3[1:, 0], list3[1:, 1], list3[1:, 2], "^", color="magenta", ms=8, mew=0.5, label="early G1")  # early G1
-    ax.plot(list4[1:, 0], list4[1:, 1], list4[1:, 2], "^", color="black", ms=8, mew=0.5, label="late G1")  # late G1
+    ax.plot(list4[1:, 0], list4[1:, 1], list4[1:, 2], "^", color="pink", ms=8, mew=0.5, label="late G1")  # late G1
     ax.plot(list5[1:, 0], list5[1:, 1], list5[1:, 2], "o", color="deepskyblue", ms=8, mew=0.5, label="S")
     ax.plot(listother[1:, 0], listother[1:, 1], listother[1:, 2], "o", color="grey", ms=8, mew=0.5, label="differentiated")
     ax.set_xlim(0, domX)

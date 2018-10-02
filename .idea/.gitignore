@@ -6,6 +6,7 @@
 !/encodings.xml
 !/gradle.xml
 !/runConfigurations/*.xml
+!/misc.xml
 
 !/inspectionProfiles/*.xml
 /inspectionProfiles/profiles_settings.xml
@@ -15,3 +16,5 @@
 
 !/templateLanguages.xml
 !/vcs.xml
+
+!/ver_runge_border.py

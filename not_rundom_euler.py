@@ -1,8 +1,8 @@
 # coding=utf-8
 """
-ルンゲクッタ法を使用
-速度の初期条件を追加
+誤差判定用の出力設定
 テスト用にランダムな要因を削除
+dt = 0.05  では小数点以下2位まで信頼できる
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -32,7 +32,7 @@ class Cell(object):
     def __init__(self):
         self.phi = 0  # 細胞周期の状態
         self.r = np.array([0,0,0])  # 細胞の座標[0,dom)でランダム
-        self.v = np.array([0,0,0])  # 細胞の速度をV_INITの90~110%でランダムに与える
+        # self.v = np.array([0,0,0])  # 細胞の速度をV_INITの90~110%でランダムに与える
         self.timer = 0  # 細胞がその状態でどれだけ時間が経過したか
         self.timer2 = 0  # phi==4の時のみ用いる遅れを表現するタイマー
         self.dend = np.array([0,0,0])  # 神経突起の位置を定数として保存
@@ -62,15 +62,12 @@ class Cell(object):
         """G2期の細胞"""
         if self.r[2] < R/2:
             # print("change G2 -> M !!")
-            if self.r[2] < 0:
-                self.r[2] = R/2
             self.phi = 2  # G2からMへの移行
             self.timer = 0.9  # M期の１時間を[0,1)のランダムで指定
 
     def phi2(self):
         """M期の細胞"""
-        if self.r[2] < 0:
-            self.r[2] = R/2
+        self.r[2] = R/2
         if self.timer > 0:
             self.timer -= dt
         else:
@@ -79,8 +76,6 @@ class Cell(object):
 
     def phi3(self):
         """G1期(突起あり)の細胞"""
-        if self.r[2] < 0:
-            self.r[2] = R/2
         if self.timer > 0:
             self.timer -= dt
         else:
@@ -89,9 +84,8 @@ class Cell(object):
 
     def phi4(self):
         """G1期(突起なし)の細胞"""
-        if self.r[2] < 0:
-            self.r[2] = R/2
         if self.timer2 > 0:
+            self.r[2] = R/2
             self.timer2 -= dt
         else:
             if self.timer > 0:
@@ -102,8 +96,6 @@ class Cell(object):
 
     def phi5(self):
         """S期"""
-        # if self.r[2] < 0:
-        #     self.r[2] = R/2
         if self.timer > 0:
             self.timer -= dt
         else:
@@ -159,7 +151,7 @@ def f_int(cell, vect_r):
     return f
 
 
-def V(r, v, phi, timer2):
+def V(r, phi, timer2):
     """timer2はphi==4用"""
     if phi == 1:
         v_phi = 8.5
@@ -173,13 +165,13 @@ def V(r, v, phi, timer2):
             v_phi = 0
         else:
             if r[2] < 15:
-                v_phi = -1.6  # 半分にした方が自然ではない????????????????????????????????
+                v_phi = -1.6
             else:
                 v_phi = 0
     else:
         v_phi = 0
     e_z = np.array([0, 0, 1])
-    return v_phi * v * e_z
+    return v_phi * V_INIT * e_z
 
 
 def H(r, dend):
@@ -216,10 +208,10 @@ for i in range(N):
     r1 = float(init[i][1])
     r2 = float(init[i][2])
     cells[i].r = np.array([r0, r1, r2])
-    v0 = float(init[i][3])
-    v1 = float(init[i][4])
-    v2 = float(init[i][5])
-    cells[i].v = np.array([v0, v1, v2])
+    # v0 = float(init[i][3])
+    # v1 = float(init[i][4])
+    # v2 = float(init[i][5])
+    # cells[i].v = np.array([v0, v1, v2])
     phi = float(init[i][6])
     cells[i].phi = phi
     timer = float(init[i][7])
@@ -247,8 +239,7 @@ while t < TIME+0.001:
     for i in range(len(cells1)):
         # print("the size of cells1 is ", cells1.shape[0])
         # runge-kutta法によって次の時刻のr,vを取得
-        # 誤差がどこまで影響してくるのかに関しての考察がまだ
-        ft = f_int(cells1, cells1[i].r) - V(cells1[i].r, cells1[i].v, cells1[i].phi, cells1[i].timer2) + H(cells1[i].r, cells1[i].dend)
+        ft = f_int(cells1, cells1[i].r) - V(cells1[i].r, cells1[i].phi, cells1[i].timer2) + H(cells1[i].r, cells1[i].dend)
         cells1[i].r += dt*ft
 
         # 細胞の状態を更新
@@ -260,8 +251,11 @@ while t < TIME+0.001:
 
     # list1 += [frunge]
 
+
+
 cells2 = copy.deepcopy(cells)
 list2 = [cells2[I].r[2]]
+
 list2phi = [num_to_phase(cells2[I].phi)]
 dt = 0.01
 t = dt
@@ -269,10 +263,7 @@ count = 1
 countlist = [10*i for i in range(1,11)]
 while t < TIME+0.001:
     for i in range(len(cells2)):
-        # print("the size of cells22 is ", cells2.shape[0])
-        # runge-kutta法によって次の時刻のr,vを取得
-        # 誤差がどこまで影響してくるのかに関しての考察がまだ
-        ft = f_int(cells2, cells2[i].r) - V(cells2[i].r, cells2[i].v, cells2[i].phi, cells2[i].timer2) + H(cells2[i].r, cells2[i].dend)
+        ft = f_int(cells2, cells2[i].r) - V(cells2[i].r, cells2[i].phi, cells2[i].timer2) + H(cells2[i].r, cells2[i].dend)
         cells2[i].r += dt*ft
 
         # 細胞の状態を更新
@@ -282,7 +273,7 @@ while t < TIME+0.001:
     t += dt
     count += 1
     # list1 += [frunge]
-
+#
 cells3 = copy.deepcopy(cells)
 list3 = [cells3[I].r[2]]
 dt = 0.005
@@ -291,7 +282,7 @@ count = 1
 countlist = [20*i for i in range(1,11)]
 while t < TIME+0.001:
     for i in range(len(cells3)):
-        ft = f_int(cells3, cells3[i].r) - V(cells3[i].r, cells3[i].v, cells3[i].phi, cells3[i].timer2) + H(cells3[i].r, cells3[i].dend)
+        ft = f_int(cells3, cells3[i].r) - V(cells3[i].r, cells3[i].phi, cells3[i].timer2) + H(cells3[i].r, cells3[i].dend)
         cells3[i].r += dt*ft
         cells3[i].calc_next(cells3)
     if count in countlist:
