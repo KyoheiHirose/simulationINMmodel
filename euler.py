@@ -5,8 +5,6 @@ euler法による数値解析
 """
 
 import numpy as np
-# import matplotlib
-# matplotlib.use('AGG')
 import matplotlib.pyplot as plt
 import random
 import math
@@ -294,15 +292,3 @@ if __name__ == '__main__':
             print(" ")
 
     plt.show()
-
-
-
-
-
-
-
-
-
-
-
-
