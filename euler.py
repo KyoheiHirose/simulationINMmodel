@@ -5,6 +5,8 @@ euler法による数値解析
 """
 
 import numpy as np
+# import matplotlib
+# matplotlib.use('AGG')
 import matplotlib.pyplot as plt
 import random
 import math
@@ -20,7 +22,7 @@ DOM_Y = 20
 DOM_Z = 100
 BETA = 15
 GAMMA = 4
-TIME = 20
+TIME = 50
 V_INIT = 20.0
 
 
@@ -139,11 +141,11 @@ def f_intract(cell):
     """
     f = np.zeros(3)
     for j in range(len(cell)):
-        r_ji = np.array(cell[j].r) - np.array(cell[i].r)
+        r_ji = cell[j].r - cell[i].r
         norm = np.linalg.norm(r_ji)
         if 0 < norm < R:
             f += (R - norm)/norm * r_ji
-    if cell[i].phi == 2 or cell[i].phi ==4:
+    if cell[i].phi == 2 or (cell[i].phi == 4 and cell[i].timer2 > 0):
         f = f*np.array([1, 1, 0])
     if R/(-2) < cell[i].r[0] < R/2:
         r_norm = R/2 + cell[i].r[0]
@@ -162,7 +164,6 @@ def f_intract(cell):
 
 def vphi(r, v, phi, timer2):
     """
-
     :param r: 現在の細胞の位置
     :param v: 細胞の速度
     :param phi:
@@ -175,15 +176,15 @@ def vphi(r, v, phi, timer2):
         if r[2] < 10 + R/2:
             v_phi = -1.6
         else:
-            v_phi = -0.5
+            v_phi = -0.1
     elif phi == 4:
         if timer2 > 0:
             v_phi = 0
         else:
-            if r[2] < 10 + R / 2:
+            if r[2] < 10 + R/2:
                 v_phi = -1.6
             else:
-                v_phi = -0.5
+                v_phi = 0
     else:
         v_phi = 0
     return v_phi * v * np.array([0, 0, -1])
@@ -212,7 +213,6 @@ if __name__ == '__main__':
     fig = plt.figure()
     ax = Axes3D(fig)
     t = 0
-    count = 0
     while t < TIME:
         for i in range(len(cells)):
             # euler method
@@ -256,15 +256,15 @@ if __name__ == '__main__':
         list5 = np.array(list5)
         list6 = np.array(list6)
         list7 = np.array(list7)
-        print('=========================t=', t,'=================================')
-        print('the number of cells is .....................................', len(cells))
-        print("the number of G1 phase cells is ............................", list1.shape[0])
-        print("the number of M phase cells is .............................", list2.shape[0])
-        print("the number of early G1 phase cells is ......................", list3.shape[0])
-        print("the number of late G1 phase cells is .......................", list4.shape[0])
-        print("the number of S phase cells is .............................", list5.shape[0])
-        print("the number of cell division phase cells is .................", list6.shape[0])
-        print("the number of differentiated cells is ......................", list7.shape[0])
+        print('=========================t=', t,'=================================','\n','\n')
+        # print('the number of cells is .....................................', len(cells))
+        # print("the number of G1 phase cells is ............................", list1.shape[0])
+        # print("the number of M phase cells is .............................", list2.shape[0])
+        # print("the number of early G1 phase cells is ......................", list3.shape[0])
+        # print("the number of late G1 phase cells is .......................", list4.shape[0])
+        # print("the number of S phase cells is .............................", list5.shape[0])
+        # print("the number of cell division phase cells is .................", list6.shape[0])
+        # print("the number of differentiated cells is ......................", list7.shape[0])
         t += dt
 
         ax.cla()
@@ -284,7 +284,7 @@ if __name__ == '__main__':
             ax.plot(list7[:, 0], list7[:, 1], list7[:, 2], "o", color="grey", ms=8, mew=0.5, label="differentiated")
         ax.set_xlim(0, DOM_X)
         ax.set_ylim(0, DOM_Y)
-        ax.set_zlim(0, DOM_Z)
+        ax.set_zlim(0, DOM_Z+100)
         ax.set_xlabel("X")
         ax.set_ylabel("Y")
         ax.set_zlabel("Z")
