@@ -1,7 +1,7 @@
 # coding=utf-8
 """
 euler法による数値解析
-
+細胞の各領域内の密度
 """
 
 import numpy as np
@@ -218,11 +218,13 @@ def vphi(r, v, phi, timer2):
 
 
 def h(r, DEND):
-    delta = DELTA * abs((1-r[2]/DOM_Z))
-    return GAMMA * DELTA *(1 - r[2]/DOM_Z)* (DEND - r) * np.array([1, 1, 0])
+    # delta = DELTA * abs((1-r[2]/DOM_Z))
+    return GAMMA * (DEND - r) * np.array([1, 1, 0])
 
 
 if __name__ == '__main__':
+
+    # initiating
     cells = []
     for i in range(N):
         number = random.random()
@@ -238,11 +240,191 @@ if __name__ == '__main__':
             z = cells[i].r[2]
             cells[i].timer = 9 * (DOM_Z - z) / DOM_Z
 
-    fig = plt.figure()
-    ax = Axes3D(fig)
+    # main loop
+
     t = 0
     while t < TIME:
+
+        # listの初期化
+        list0to10 = [0, 0, 0, 0, 0, 0, 0]  # bin [0, 10)の細胞をカウントphiとindexが一致
+        list10to20 = [0, 0, 0, 0, 0, 0, 0]
+        list20to30 = [0, 0, 0, 0, 0, 0, 0]
+        list30to40 = [0, 0, 0, 0, 0, 0, 0]
+        list40to50 = [0, 0, 0, 0, 0, 0, 0]
+        list50to60 = [0, 0, 0, 0, 0, 0, 0]
+        list60to70 = [0, 0, 0, 0, 0, 0, 0]
+        list70to80 = [0, 0, 0, 0, 0, 0, 0]
+        list80to90 = [0, 0, 0, 0, 0, 0, 0]
+        list90to100 = [0, 0, 0, 0, 0, 0, 0]
+        listover100 = [0, 0, 0, 0, 0, 0, 0]
+
+        # 初期値を表示したいから更新前に情報を取り出す
         for i in range(len(cells)):
+            if 0 < cells[i].r[2] <= 10:
+                if cells[i].phi == 1:
+                    list0to10[0] += 1
+                elif cells[i].phi == 2:
+                    list0to10[1] += 1
+                elif cells[i].phi == 3:
+                    list0to10[2] += 1
+                elif cells[i].phi == 4:
+                    list0to10[3] += 1
+                elif cells[i].phi == 5:
+                    list0to10[4] += 1
+                elif cells[i].phi == 6:
+                    list0to10[5] += 1
+                else:
+                    list0to10[6] += 1
+            elif 10 < cells[i].r[2] <= 20:
+                if cells[i].phi == 1:
+                    list10to20[0] += 1
+                elif cells[i].phi == 2:
+                    list10to20[1] += 1
+                elif cells[i].phi == 3:
+                    list10to20[2] += 1
+                elif cells[i].phi == 4:
+                    list10to20[3] += 1
+                elif cells[i].phi == 5:
+                    list10to20[4] += 1
+                elif cells[i].phi == 6:
+                    list10to20[5] += 1
+                else:
+                    list20to30[6] += 1
+            elif 20 < cells[i].r[2] <= 30:
+                if cells[i].phi == 1:
+                    list20to30[0] += 1
+                elif cells[i].phi == 2:
+                    list20to30[1] += 1
+                elif cells[i].phi == 3:
+                    list20to30[2] += 1
+                elif cells[i].phi == 4:
+                    list20to30[3] += 1
+                elif cells[i].phi == 5:
+                    list20to30[4] += 1
+                elif cells[i].phi == 6:
+                    list20to30[5] += 1
+                else:
+                    list20to30[6] += 1
+            elif 30 < cells[i].r[2] <= 40:
+                if cells[i].phi == 1:
+                    list30to40[0] += 1
+                elif cells[i].phi == 2:
+                    list30to40[1] += 1
+                elif cells[i].phi == 3:
+                    list30to40[2] += 1
+                elif cells[i].phi == 4:
+                    list30to40[3] += 1
+                elif cells[i].phi == 5:
+                    list30to40[4] += 1
+                elif cells[i].phi == 6:
+                    list30to40[5] += 1
+                else:
+                    list30to40[6] += 1
+            elif 40 < cells[i].r[2] <= 50:
+                if cells[i].phi == 1:
+                    list40to50[0] += 1
+                elif cells[i].phi == 2:
+                    list40to50[1] += 1
+                elif cells[i].phi == 3:
+                    list40to50[2] += 1
+                elif cells[i].phi == 4:
+                    list40to50[3] += 1
+                elif cells[i].phi == 5:
+                    list40to50[4] += 1
+                elif cells[i].phi == 6:
+                    list40to50[5] += 1
+                else:
+                    list40to50[6] += 1
+            elif 50 < cells[i].r[2] <= 60:
+                if cells[i].phi == 1:
+                    list50to60[0] += 1
+                elif cells[i].phi == 2:
+                    list50to60[1] += 1
+                elif cells[i].phi == 3:
+                    list50to60[2] += 1
+                elif cells[i].phi == 4:
+                    list50to60[3] += 1
+                elif cells[i].phi == 5:
+                    list50to60[4] += 1
+                elif cells[i].phi == 6:
+                    list50to60[5] += 1
+                else:
+                    list50to60[6] += 1
+            elif 60 < cells[i].r[2] <= 70:
+                if cells[i].phi == 1:
+                    list60to70[0] += 1
+                elif cells[i].phi == 2:
+                    list60to70[1] += 1
+                elif cells[i].phi == 3:
+                    list60to70[2] += 1
+                elif cells[i].phi == 4:
+                    list60to70[3] += 1
+                elif cells[i].phi == 5:
+                    list60to70[4] += 1
+                elif cells[i].phi == 6:
+                    list60to70[5] += 1
+                else:
+                    list60to70[6] += 1
+            elif 70 < cells[i].r[2] <= 80:
+                if cells[i].phi == 1:
+                    list70to80[0] += 1
+                elif cells[i].phi == 2:
+                    list70to80[1] += 1
+                elif cells[i].phi == 3:
+                    list70to80[2] += 1
+                elif cells[i].phi == 4:
+                    list70to80[3] += 1
+                elif cells[i].phi == 5:
+                    list70to80[4] += 1
+                elif cells[i].phi == 6:
+                    list70to80[5] += 1
+                else:
+                    list70to80[6] += 1
+            elif 80 < cells[i].r[2] <= 90:
+                if cells[i].phi == 1:
+                    list80to90[0] += 1
+                elif cells[i].phi == 2:
+                    list80to90[1] += 1
+                elif cells[i].phi == 3:
+                    list80to90[2] += 1
+                elif cells[i].phi == 4:
+                    list80to90[3] += 1
+                elif cells[i].phi == 5:
+                    list80to90[4] += 1
+                elif cells[i].phi == 6:
+                    list80to90[5] += 1
+                else:
+                    list80to90[6] += 1
+            elif 90 < cells[i].r[2] <= 100:
+                if cells[i].phi == 1:
+                    list90to100[0] += 1
+                elif cells[i].phi == 2:
+                    list90to100[1] += 1
+                elif cells[i].phi == 3:
+                    list90to100[2] += 1
+                elif cells[i].phi == 4:
+                    list90to100[3] += 1
+                elif cells[i].phi == 5:
+                    list90to100[4] += 1
+                elif cells[i].phi == 6:
+                    list90to100[5] += 1
+                else:
+                    list90to100[6] += 1
+            else:
+                if cells[i].phi == 1:
+                    listover100[0] += 1
+                elif cells[i].phi == 2:
+                    listover100[1] += 1
+                elif cells[i].phi == 3:
+                    listover100[2] += 1
+                elif cells[i].phi == 4:
+                    listover100[3] += 1
+                elif cells[i].phi == 5:
+                    listover100[4] += 1
+                elif cells[i].phi == 6:
+                    listover100[5] += 1
+                else:
+                    listover100[6] += 1
             # euler method
             ft = f_intaract(cells) \
                  + vphi(cells[i].r, cells[i].v, cells[i].phi, cells[i].timer2) \
@@ -250,75 +432,8 @@ if __name__ == '__main__':
             cells[i].r += ft*dt
             # 細胞の状態を更新
             cells[i].calc_next(cells)
-        # 以下plotに関する
-        list1 = []
-        list2 = []
-        list3 = []
-        list4 = []
-        list5 = []
-        list6 = []
-        list7 = []
 
-        for i in range(len(cells)):
-            if cells[i].phi == 1:
-                list1 += [cells[i].r]
-            elif cells[i].phi == 2:
-                list2 += [cells[i].r]
-            elif cells[i].phi == 3:
-                list3 += [cells[i].r]
-            elif cells[i].phi == 4:
-                list4 += [cells[i].r]
-            elif cells[i].phi == 5:
-                list5 += [cells[i].r]
-            elif cells[i].phi == 6:
-                list6 += [cells[i].r]
-            elif cells[i].phi == 7:
-                list7 += [cells[i].r]
-            else:
-                print('Unexpected error')
-
-        list1 = np.array(list1)
-        list2 = np.array(list2)
-        list3 = np.array(list3)
-        list4 = np.array(list4)
-        list5 = np.array(list5)
-        list6 = np.array(list6)
-        list7 = np.array(list7)
         print('=========================t=', t,'=================================','\n','\n')
-        # print('the number of cells is .....................................', len(cells))
-        # print("the number of G1 phase cells is ............................", list1.shape[0])
-        # print("the number of M phase cells is .............................", list2.shape[0])
-        # print("the number of early G1 phase cells is ......................", list3.shape[0])
-        # print("the number of late G1 phase cells is .......................", list4.shape[0])
-        # print("the number of S phase cells is .............................", list5.shape[0])
-        # print("the number of cell division phase cells is .................", list6.shape[0])
-        # print("the number of differentiated cells is ......................", list7.shape[0])
         t += dt
 
-        ax.cla()
-        if list1.shape[0] > 0:
-            ax.plot(list1[:, 0], list1[:, 1], list1[:, 2], "o", color="orange", ms=8, mew=0.5, label="G2")  # G2 phase
-        if list2.shape[0] > 0:
-            ax.plot(list2[:, 0], list2[:, 1], list2[:, 2], "o", color="red", ms=8, mew=0.5, label="M")  # M phase
-        if list3.shape[0] > 0:
-            ax.plot(list3[:, 0], list3[:, 1], list3[:, 2], "^", color="magenta", ms=8, mew=0.5, label="early G1")  # early G1
-        if list4.shape[0] > 0:
-            ax.plot(list4[:, 0], list4[:, 1], list4[:, 2], "^", color="pink", ms=8, mew=0.5, label="late G1")  # late G1
-        if list5.shape[0] > 0:
-            ax.plot(list5[:, 0], list5[:, 1], list5[:, 2], "o", color="deepskyblue", ms=8, mew=0.5, label="S")
-        # if list6.shape[0] > 0:
-        #     ax.plot(list6[:, 0], list6[:, 1], list6[:, 2], "o", color="red", ms=8, mew=0.5, label="S")
-        if list7.shape[0] > 0:
-            ax.plot(list7[:, 0], list7[:, 1], list7[:, 2], "o", color="grey", ms=8, mew=0.5, label="differentiated")
-        ax.set_xlim(0, DOM_X)
-        ax.set_ylim(0, DOM_Y)
-        ax.set_zlim(0, DOM_Z+100)
-        ax.set_xlabel("X")
-        ax.set_ylabel("Y")
-        ax.set_zlabel("Z")
-        ax.legend()
-        plt.pause(0.001)
-        for i in range(3):
-            print(" ")
 
-    plt.show()
