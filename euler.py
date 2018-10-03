@@ -58,6 +58,7 @@ class Cell(object):
             self.phi7()
         else:
             print('---Error happen in calc_next')
+		self.border()
 
     def phi1(self):
         """ G2 phase """
@@ -134,16 +135,26 @@ class Cell(object):
         #     self.r[2] = DOM_Z + DOM_Z/2  # 150umで除外
         pass
 
+	def border_change(self):
+		if self.r[0] < 0:
+			self.r[0] = DOM_X - self.r[0]
+		elif self.r[0] > DOM_X:
+			self.r[0] = self.r[0] - DOM_X
+		if self.r[1] < 0:
+			self.r[1] = DOM_Y - self.r[1]
+		elif self.r[1] > DOM_Y:
+			self.r[1] = self.r[1] - DOM_Y
+
 
 def f_intaract(cell):
-    """
+	"""
     cells[i]に対する相互作用による力を計算して和を取る
     但し、phi == 2(M phase), 4(G1 phase 突起なし) は apical面(z == 0)にあるためz方向には拘束
     :param cell:
     :return: -BETA * f
     """
-    f = np.zeros(3)
-    for j in range(len(cell)):
+	f = np.zeros(3)
+	for j in range(len(cell)):
         r_ji = cell[j].r - cell[i].r
         norm = np.linalg.norm(r_ji)
         if 0 < norm < R:
