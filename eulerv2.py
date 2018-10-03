@@ -1,7 +1,7 @@
 # coding=utf-8
 """
 euler法による数値解析
-
+計算結果の統計的取得用
 """
 
 import numpy as np
@@ -55,7 +55,7 @@ class Cell(object):
         elif self.phi == 6:
             self.phi6(cell)
         elif self.phi == 7:
-            self.phi7()
+            self.phi7(cell)
         else:
             print('---Error happen in calc_next')
 
@@ -111,7 +111,6 @@ class Cell(object):
             self.phi = 1  # change to G2 phase
 
     def phi6(self, cell):
-        """ cell division """
         theta = 2 * math.pi * random.random()  # 0~2piでランダムな分裂角度を生成
         rad = np.array([math.cos(theta), math.sin(theta), 0])
         cell += [copy.deepcopy(cell[i])]
@@ -127,12 +126,9 @@ class Cell(object):
         cell[i].timer = 9 + random.uniform(-1, 1)
         print('cell was divided!!!')
 
-    def phi7(self):
-        """ differentiated """
-        # do nothing for now
-        # if self.r[2] > DOM_Z + R/2:
-        #     self.r[2] = DOM_Z + DOM_Z/2  # 150umで除外
-        pass
+    def phi7(self, cell):
+        if self.r[2] > DOM_Z + R/2:
+            self.r[2] = DOM_Z * 2
 
 
 def f_intaract(cell):
@@ -150,30 +146,18 @@ def f_intaract(cell):
             f += (R - norm)/norm * r_ji
     if cell[i].phi == 2 or (cell[i].phi == 4 and cell[i].timer2 > 0):
         f = f*np.array([1, 1, 0])
-    # 境界条件領域外に細胞
-    # if R/(-2) < cell[i].r[0] < R/2:
-    #     r_norm = R/2 + cell[i].r[0]
-    #     f += (R-r_norm)*np.array([-1, 0, 0])
-    # elif DOM_X-R/2 < cell[i].r[0] < DOM_X+R/2:
-    #     r_norm = DOM_X + R/2 - cell[i].r[0]
-    #     f += (R-r_norm)*np.array([1, 0, 0])
-    # if R/(-2) < cell[i].r[1] < R/2:
-    #     r_norm = R/2 + cell[i].r[1]
-    #     f += (R-r_norm)*np.array([0, -1, 0])
-    # elif DOM_Y-R/2 < cell[i].r[1] < DOM_Y+R/2:
-    #     r_norm = DOM_Y + R/2 - cell[i].r[1]
-    #     f += (R-r_norm)*np.array([0, 1, 0])
-    # 境界条件2領域外R/2に壁
-    if cell[i].r[0] < 0:
-        cell[i].r[0] = 0
-    elif DOM_X < cell[i].r[0]:
-        cell[i].r[0] = DOM_X
-    if cell[i].r[1] < 0:
-        cell[i].r[1] = 0
-    elif DOM_Y < cell[i].r[1]:
-        cell[i].r[1] = DOM_Y
-
-
+    if R/(-2) < cell[i].r[0] < R/2:
+        r_norm = R/2 + cell[i].r[0]
+        f += (R-r_norm)*np.array([-1, 0, 0])
+    elif DOM_X-R/2 < cell[i].r[0] < DOM_X+R/2:
+        r_norm = DOM_X + R/2 - cell[i].r[0]
+        f += (R-r_norm)*np.array([1, 0, 0])
+    if R/(-2) < cell[i].r[1] < R/2:
+        r_norm = R/2 + cell[i].r[1]
+        f += (R-r_norm)*np.array([0, -1, 0])
+    elif DOM_Y-R/2 < cell[i].r[1] < DOM_Y+R/2:
+        r_norm = DOM_Y + R/2 - cell[i].r[1]
+        f += (R-r_norm)*np.array([0, 1, 0])
     return -1 * BETA * f
 
 
@@ -191,7 +175,7 @@ def vphi(r, v, phi, timer2):
         if r[2] < 10 + R/2:
             v_phi = -1.6
         else:
-            v_phi = -0.3
+            v_phi = - 0.1
     elif phi == 4:
         if timer2 > 0:
             v_phi = 0
@@ -199,7 +183,7 @@ def vphi(r, v, phi, timer2):
             if r[2] < 10 + R/2:
                 v_phi = -1.6
             else:
-                v_phi = -0.3
+                v_phi = 0
     else:
         v_phi = 0
     return v_phi * v * np.array([0, 0, -1])
@@ -210,6 +194,7 @@ def h(r, DEND):
 
 
 if __name__ == '__main__':
+    # initiating
     cells = []
     for i in range(N):
         number = random.random()
@@ -225,10 +210,9 @@ if __name__ == '__main__':
             z = cells[i].r[2]
             cells[i].timer = 9 * (DOM_Z - z) / DOM_Z
 
-    fig = plt.figure()
-    ax = Axes3D(fig)
     t = 0
     while t < TIME:
+        # 細胞の状態を計算
         for i in range(len(cells)):
             # euler method
             ft = f_intaract(cells) \
@@ -237,7 +221,8 @@ if __name__ == '__main__':
             cells[i].r += ft*dt
             # 細胞の状態を更新
             cells[i].calc_next(cells)
-        # 以下plotに関する
+
+        # 各細胞周期の細胞数をカウント
         list1 = []
         list2 = []
         list3 = []
@@ -281,31 +266,3 @@ if __name__ == '__main__':
         # print("the number of cell division phase cells is .................", list6.shape[0])
         # print("the number of differentiated cells is ......................", list7.shape[0])
         t += dt
-
-        ax.cla()
-        if list1.shape[0] > 0:
-            ax.plot(list1[:, 0], list1[:, 1], list1[:, 2], "o", color="orange", ms=8, mew=0.5, label="G2")  # G2 phase
-        if list2.shape[0] > 0:
-            ax.plot(list2[:, 0], list2[:, 1], list2[:, 2], "o", color="red", ms=8, mew=0.5, label="M")  # M phase
-        if list3.shape[0] > 0:
-            ax.plot(list3[:, 0], list3[:, 1], list3[:, 2], "^", color="magenta", ms=8, mew=0.5, label="early G1")  # early G1
-        if list4.shape[0] > 0:
-            ax.plot(list4[:, 0], list4[:, 1], list4[:, 2], "^", color="pink", ms=8, mew=0.5, label="late G1")  # late G1
-        if list5.shape[0] > 0:
-            ax.plot(list5[:, 0], list5[:, 1], list5[:, 2], "o", color="deepskyblue", ms=8, mew=0.5, label="S")
-        # if list6.shape[0] > 0:
-        #     ax.plot(list6[:, 0], list6[:, 1], list6[:, 2], "o", color="red", ms=8, mew=0.5, label="S")
-        if list7.shape[0] > 0:
-            ax.plot(list7[:, 0], list7[:, 1], list7[:, 2], "o", color="grey", ms=8, mew=0.5, label="differentiated")
-        ax.set_xlim(0, DOM_X)
-        ax.set_ylim(0, DOM_Y)
-        ax.set_zlim(0, DOM_Z+100)
-        ax.set_xlabel("X")
-        ax.set_ylabel("Y")
-        ax.set_zlabel("Z")
-        ax.legend()
-        plt.pause(0.001)
-        for i in range(3):
-            print(" ")
-
-    plt.show()
