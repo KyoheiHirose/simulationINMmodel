@@ -18,8 +18,12 @@ BETA = 15
 GAMMA = 4
 V_INIT = 20.0
 N = 100
-TIME = 2  # 20stepで0.25secほど
+TIME = 20  # 20stepで0.25secほど 400stepで17sec
 dt = 0.1
+phi3up = 0
+phi4up = 0
+v_phi_ini3 = -1.6
+v_phi_ini4 = -1.6
 
 DOM_X = 20
 DOM_Y = 20
@@ -144,6 +148,8 @@ class Cell(object):
             self.r[1] = DOM_Y - self.r[1]
         elif self.r[1] > DOM_Y:
             self.r[1] = self.r[1] - DOM_Y
+        if self.r[2] < 0:
+            self.r[2] = 0
 
 # @profile
 # def f_intaract(cell, i):
@@ -180,17 +186,17 @@ def vphi(r, v, phi, timer2):
         v_phi = 8.5
     elif phi == 3:
         if r[2] < 10 + R/2:
-            v_phi = -1.6
+            v_phi = v_phi_ini3
         else:
-            v_phi = -0.3
+            v_phi = phi3up
     elif phi == 4:
         if timer2 > 0:
             v_phi = 0
         else:
             if r[2] < 10 + R/2:
-                v_phi = -1.6
+                v_phi = v_phi_ini4
             else:
-                v_phi = -0.3
+                v_phi = phi4up
     else:
         v_phi = 0
     return v_phi * v * np.array([0, 0, -1])

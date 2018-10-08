@@ -1,47 +1,185 @@
+
 import re
 import numpy as np
-from euler_high import dt, TIME
+from euler_high import dt, TIME, phi3up, phi4up
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+t = np.arange(0, TIME, dt)  # 時間軸を用いる際の横軸
+samples = [1,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,99]  # 左の番号のついたものだけをグラフ上に表示
 
-def dens_bins(pos, sta, step):
-	d_count = 0
-	bin0 = []
-	bin1 = []
-	bin2 = []
-	bin3 = []
-	bin4 = []
-	bin5 = []
-	bin6 = []
-	bin7 = []
-	bin8 = []
-	bin9 = []
-	bin10 = []
+
+def dens_bins(pos, sta, start, step):
+	"""
+	各binの細胞数を計算し出力する
+	:param pos: positions
+	:param sta: states
+	:param start: 記録開始時間　これ以前の記録は表示されない
+	:param step: STEP=TIME/dt
+	:return: グラフの出力
+	"""
+	d_count = start
+	bin0 = [[], [[],[],[],[],[],[],[]]]
+	bin1 = [[], [[],[],[],[],[],[],[]]]
+	bin2 = [[], [[],[],[],[],[],[],[]]]
+	bin3 = [[], [[],[],[],[],[],[],[]]]
+	bin4 = [[], [[],[],[],[],[],[],[]]]
+	bin5 = [[], [[],[],[],[],[],[],[]]]
+	bin6 = [[], [[],[],[],[],[],[],[]]]
+	bin7 = [[], [[],[],[],[],[],[],[]]]
+	bin8 = [[], [[],[],[],[],[],[],[]]]
+	bin9 = [[], [[],[],[],[],[],[],[]]]
 	while d_count < step:
-		bin0 += [np.sum((0. < pos[:, d_count])&(pos[:,d_count] <= 10.))]
-		bin1 += [np.sum((10. < pos[:, d_count])&(pos[:,d_count] <= 20.))]
-		bin2 += [np.sum((20. < pos[:, d_count])&(pos[:,d_count] <= 30.))]
-		bin3 += [np.sum((30. < pos[:, d_count])&(pos[:,d_count] <= 40.))]
-		bin4 += [np.sum((40. < pos[:, d_count])&(pos[:,d_count] <= 50.))]
-		bin5 += [np.sum((50. < pos[:, d_count])&(pos[:,d_count] <= 60.))]
-		bin6 += [np.sum((60. < pos[:, d_count])&(pos[:,d_count] <= 70.))]
-		bin7 += [np.sum((70. < pos[:, d_count])&(pos[:,d_count] <= 80.))]
-		bin8 += [np.sum((80. < pos[:, d_count])&(pos[:,d_count] <= 90.))]
-		bin9 += [np.sum((90. < pos[:, d_count])&(pos[:,d_count] <= 100.))]
-		bin10 += [np.sum((100. < pos[:, d_count]))]
+		bin0[0] += [np.sum((0. < pos[:, d_count])&(pos[:,d_count] <= 10.))]
+		bin1[0] += [np.sum((10. < pos[:, d_count])&(pos[:,d_count] <= 20.))]
+		bin2[0] += [np.sum((20. < pos[:, d_count])&(pos[:,d_count] <= 30.))]
+		bin3[0] += [np.sum((30. < pos[:, d_count])&(pos[:,d_count] <= 40.))]
+		bin4[0] += [np.sum((40. < pos[:, d_count])&(pos[:,d_count] <= 50.))]
+		bin5[0] += [np.sum((50. < pos[:, d_count])&(pos[:,d_count] <= 60.))]
+		bin6[0] += [np.sum((60. < pos[:, d_count])&(pos[:,d_count] <= 70.))]
+		bin7[0] += [np.sum((70. < pos[:, d_count])&(pos[:,d_count] <= 80.))]
+		bin8[0] += [np.sum((80. < pos[:, d_count])&(pos[:,d_count] <= 90.))]
+		bin9[0] += [np.sum((90. < pos[:, d_count])&(pos[:,d_count] <= 100.))]
+
+		# phi == 1
+		bin0[1][0] += [np.sum((0. < pos[:, d_count]) & (pos[:, d_count] <= 10.) & (sta[:, d_count] == 1))]
+		bin1[1][0] += [np.sum((10. < pos[:, d_count]) & (pos[:, d_count] <= 20.) & (sta[:, d_count] == 1))]
+		bin2[1][0] += [np.sum((20. < pos[:, d_count]) & (pos[:, d_count] <= 30.) & (sta[:, d_count] == 1))]
+		bin3[1][0] += [np.sum((30. < pos[:, d_count]) & (pos[:, d_count] <= 40.) & (sta[:, d_count] == 1))]
+		bin4[1][0] += [np.sum((40. < pos[:, d_count]) & (pos[:, d_count] <= 50.) & (sta[:, d_count] == 1))]
+		bin5[1][0] += [np.sum((50. < pos[:, d_count]) & (pos[:, d_count] <= 60.) & (sta[:, d_count] == 1))]
+		bin6[1][0] += [np.sum((60. < pos[:, d_count]) & (pos[:, d_count] <= 70.) & (sta[:, d_count] == 1))]
+		bin7[1][0] += [np.sum((70. < pos[:, d_count]) & (pos[:, d_count] <= 80.) & (sta[:, d_count] == 1))]
+		bin8[1][0] += [np.sum((80. < pos[:, d_count]) & (pos[:, d_count] <= 90.) & (sta[:, d_count] == 1))]
+		bin9[1][0] += [np.sum((90. < pos[:, d_count]) & (pos[:, d_count] <= 100.) & (sta[:, d_count] == 1))]
+		# phi == 2
+		bin0[1][1] += [np.sum((0. < pos[:, d_count]) & (pos[:, d_count] <= 10.) & (sta[:, d_count] == 2))]
+		bin1[1][1] += [np.sum((10. < pos[:, d_count]) & (pos[:, d_count] <= 20.) & (sta[:, d_count] == 2))]
+		bin2[1][1] += [np.sum((20. < pos[:, d_count]) & (pos[:, d_count] <= 30.) & (sta[:, d_count] == 2))]
+		bin3[1][1] += [np.sum((30. < pos[:, d_count]) & (pos[:, d_count] <= 40.) & (sta[:, d_count] == 2))]
+		bin4[1][1] += [np.sum((40. < pos[:, d_count]) & (pos[:, d_count] <= 50.) & (sta[:, d_count] == 2))]
+		bin5[1][1] += [np.sum((50. < pos[:, d_count]) & (pos[:, d_count] <= 60.) & (sta[:, d_count] == 2))]
+		bin6[1][1] += [np.sum((60. < pos[:, d_count]) & (pos[:, d_count] <= 70.) & (sta[:, d_count] == 2))]
+		bin7[1][1] += [np.sum((70. < pos[:, d_count]) & (pos[:, d_count] <= 80.) & (sta[:, d_count] == 2))]
+		bin8[1][1] += [np.sum((80. < pos[:, d_count]) & (pos[:, d_count] <= 90.) & (sta[:, d_count] == 2))]
+		bin9[1][1] += [np.sum((90. < pos[:, d_count]) & (pos[:, d_count] <= 100.) & (sta[:, d_count] == 2))]
+		# phi == 3
+		bin0[1][2] += [np.sum((0. < pos[:, d_count]) & (pos[:, d_count] <= 10.) & (sta[:, d_count] == 3))]
+		bin1[1][2] += [np.sum((10. < pos[:, d_count]) & (pos[:, d_count] <= 20.) & (sta[:, d_count] == 3))]
+		bin2[1][2] += [np.sum((20. < pos[:, d_count]) & (pos[:, d_count] <= 30.) & (sta[:, d_count] == 3))]
+		bin3[1][2] += [np.sum((30. < pos[:, d_count]) & (pos[:, d_count] <= 40.) & (sta[:, d_count] == 3))]
+		bin4[1][2] += [np.sum((40. < pos[:, d_count]) & (pos[:, d_count] <= 50.) & (sta[:, d_count] == 3))]
+		bin5[1][2] += [np.sum((50. < pos[:, d_count]) & (pos[:, d_count] <= 60.) & (sta[:, d_count] == 3))]
+		bin6[1][2] += [np.sum((60. < pos[:, d_count]) & (pos[:, d_count] <= 70.) & (sta[:, d_count] == 3))]
+		bin7[1][2] += [np.sum((70. < pos[:, d_count]) & (pos[:, d_count] <= 80.) & (sta[:, d_count] == 3))]
+		bin8[1][2] += [np.sum((80. < pos[:, d_count]) & (pos[:, d_count] <= 90.) & (sta[:, d_count] == 3))]
+		bin9[1][2] += [np.sum((90. < pos[:, d_count]) & (pos[:, d_count] <= 100.) & (sta[:, d_count] == 3))]
+		# phi == 4
+		bin0[1][3] += [np.sum((0. < pos[:, d_count]) & (pos[:, d_count] <= 10.) & (sta[:, d_count] == 4))]
+		bin1[1][3] += [np.sum((10. < pos[:, d_count]) & (pos[:, d_count] <= 20.) & (sta[:, d_count] == 4))]
+		bin2[1][3] += [np.sum((20. < pos[:, d_count]) & (pos[:, d_count] <= 30.) & (sta[:, d_count] == 4))]
+		bin3[1][3] += [np.sum((30. < pos[:, d_count]) & (pos[:, d_count] <= 40.) & (sta[:, d_count] == 4))]
+		bin4[1][3] += [np.sum((40. < pos[:, d_count]) & (pos[:, d_count] <= 50.) & (sta[:, d_count] == 4))]
+		bin5[1][3] += [np.sum((50. < pos[:, d_count]) & (pos[:, d_count] <= 60.) & (sta[:, d_count] == 4))]
+		bin6[1][3] += [np.sum((60. < pos[:, d_count]) & (pos[:, d_count] <= 70.) & (sta[:, d_count] == 4))]
+		bin7[1][3] += [np.sum((70. < pos[:, d_count]) & (pos[:, d_count] <= 80.) & (sta[:, d_count] == 4))]
+		bin8[1][3] += [np.sum((80. < pos[:, d_count]) & (pos[:, d_count] <= 90.) & (sta[:, d_count] == 4))]
+		bin9[1][3] += [np.sum((90. < pos[:, d_count]) & (pos[:, d_count] <= 100.) & (sta[:, d_count] == 4))]
+		# phi == 5
+		bin0[1][4] += [np.sum((0. < pos[:, d_count]) & (pos[:, d_count] <= 10.) & (sta[:, d_count] == 5))]
+		bin1[1][4] += [np.sum((10. < pos[:, d_count]) & (pos[:, d_count] <= 20.) & (sta[:, d_count] == 5))]
+		bin2[1][4] += [np.sum((20. < pos[:, d_count]) & (pos[:, d_count] <= 30.) & (sta[:, d_count] == 5))]
+		bin3[1][4] += [np.sum((30. < pos[:, d_count]) & (pos[:, d_count] <= 40.) & (sta[:, d_count] == 5))]
+		bin4[1][4] += [np.sum((40. < pos[:, d_count]) & (pos[:, d_count] <= 50.) & (sta[:, d_count] == 5))]
+		bin5[1][4] += [np.sum((50. < pos[:, d_count]) & (pos[:, d_count] <= 60.) & (sta[:, d_count] == 5))]
+		bin6[1][4] += [np.sum((60. < pos[:, d_count]) & (pos[:, d_count] <= 70.) & (sta[:, d_count] == 5))]
+		bin7[1][4] += [np.sum((70. < pos[:, d_count]) & (pos[:, d_count] <= 80.) & (sta[:, d_count] == 5))]
+		bin8[1][4] += [np.sum((80. < pos[:, d_count]) & (pos[:, d_count] <= 90.) & (sta[:, d_count] == 5))]
+		bin9[1][4] += [np.sum((90. < pos[:, d_count]) & (pos[:, d_count] <= 100.) & (sta[:, d_count] == 5))]
+		# phi == 6
+		bin0[1][5] += [np.sum((0. < pos[:, d_count]) & (pos[:, d_count] <= 10.) & (sta[:, d_count] == 6))]
+		bin1[1][5] += [np.sum((10. < pos[:, d_count]) & (pos[:, d_count] <= 20.) & (sta[:, d_count] == 6))]
+		bin2[1][5] += [np.sum((20. < pos[:, d_count]) & (pos[:, d_count] <= 30.) & (sta[:, d_count] == 6))]
+		bin3[1][5] += [np.sum((30. < pos[:, d_count]) & (pos[:, d_count] <= 40.) & (sta[:, d_count] == 6))]
+		bin4[1][5] += [np.sum((40. < pos[:, d_count]) & (pos[:, d_count] <= 50.) & (sta[:, d_count] == 6))]
+		bin5[1][5] += [np.sum((50. < pos[:, d_count]) & (pos[:, d_count] <= 60.) & (sta[:, d_count] == 6))]
+		bin6[1][5] += [np.sum((60. < pos[:, d_count]) & (pos[:, d_count] <= 70.) & (sta[:, d_count] == 6))]
+		bin7[1][5] += [np.sum((70. < pos[:, d_count]) & (pos[:, d_count] <= 80.) & (sta[:, d_count] == 6))]
+		bin8[1][5] += [np.sum((80. < pos[:, d_count]) & (pos[:, d_count] <= 90.) & (sta[:, d_count] == 6))]
+		bin9[1][5] += [np.sum((90. < pos[:, d_count]) & (pos[:, d_count] <= 100.) & (sta[:, d_count] == 6))]
+		# phi ==27
+		bin0[1][6] += [np.sum((0. < pos[:, d_count]) & (pos[:, d_count] <= 10.) & (sta[:, d_count] == 7))]
+		bin1[1][6] += [np.sum((10. < pos[:, d_count]) & (pos[:, d_count] <= 20.) & (sta[:, d_count] == 7))]
+		bin2[1][6] += [np.sum((20. < pos[:, d_count]) & (pos[:, d_count] <= 30.) & (sta[:, d_count] == 7))]
+		bin3[1][6] += [np.sum((30. < pos[:, d_count]) & (pos[:, d_count] <= 40.) & (sta[:, d_count] == 7))]
+		bin4[1][6] += [np.sum((40. < pos[:, d_count]) & (pos[:, d_count] <= 50.) & (sta[:, d_count] == 7))]
+		bin5[1][6] += [np.sum((50. < pos[:, d_count]) & (pos[:, d_count] <= 60.) & (sta[:, d_count] == 7))]
+		bin6[1][6] += [np.sum((60. < pos[:, d_count]) & (pos[:, d_count] <= 70.) & (sta[:, d_count] == 7))]
+		bin7[1][6] += [np.sum((70. < pos[:, d_count]) & (pos[:, d_count] <= 80.) & (sta[:, d_count] == 7))]
+		bin8[1][6] += [np.sum((80. < pos[:, d_count]) & (pos[:, d_count] <= 90.) & (sta[:, d_count] == 7))]
+		bin9[1][6] += [np.sum((90. < pos[:, d_count]) & (pos[:, d_count] <= 100.) & (sta[:, d_count] == 7))]
 		d_count += 1
-	x = np.arange(0, TIME, dt)
-	plt.plot(x,bin0)
-	plt.plot(x,bin1)
-	plt.plot(x,bin2)
-	plt.plot(x,bin3)
-	plt.plot(x,bin4)
-	plt.plot(x,bin5)
-	plt.plot(x,bin6)
-	plt.plot(x,bin7)
-	plt.plot(x,bin8)
-	plt.plot(x,bin9)
-	plt.plot(x,bin10)
+
+	plt.plot(t, bin0[0], label='bin0', lw='3')
+	plt.plot(t, bin1[0], label='bin1')
+	plt.plot(t, bin2[0], label='bin2')
+	plt.plot(t, bin3[0], label='bin3')
+	plt.plot(t, bin4[0], label='bin4')
+	plt.plot(t, bin5[0], label='bin5')
+	plt.plot(t, bin6[0], label='bin6')
+	plt.plot(t, bin7[0], label='bin7')
+	plt.plot(t, bin8[0], label='bin8')
+	plt.plot(t, bin9[0], label='bin9')
+	plt.legend()
+	plt.title('The density of each bins')
+	plt.xlabel('time(hour)')
+
+	# return plt.savefig('outputs/figbin_vphi=3')
+	return plt.show()
+
+
+# def g2tog1_movement(pos, sta):
+# 	g2g1s_pos = pos[samples]
+# 	g2g1s_sta = sta[samples]
+# 	g2g1_ind = set(np.where(g2g1s_sta == 2)[0])
+# 	for i,p in enumerate(pos):
+# 		pass
+# 		if i in samples:
+		# 	plt.plot(t, p)
+	# plt.title('CELL MOVEMENT FROM G2 to G1')
+	# plt.ylabel('(um)')
+	# plt.xlabel('time(hour)')
+	#
+	# return plt.show()
+
+
+def cell_displacement(pos):
+	"""
+	各細胞の初期値からの変位を表示
+	:param pos:
+	:return:
+	"""
+	pos0 = np.reshape(pos[:, 0], (len(pos), 1))
+	dplace = pos - pos0
+	for i, dpla in enumerate(dplace):
+		if i in samples:
+			plt.plot(t, dpla)
+	plt.title('DISPLACEMENT')
+	plt.ylabel('displacement(um)')
+	plt.xlabel('time(hour)')
+	# return plt.savefig('outputs/figdisp_vphi=3')
+	return plt.show()
+
+
+def cell_movement(pos):
+	for i, p in enumerate(pos):
+		if i in samples:
+			plt.plot(t, p)
+	plt.title('MOVEMENT')
+	plt.ylabel('(um)')
+	plt.xlabel('time(hour)')
+	# return plt.savefig('outputs/figmov_vphi=3')
 	return plt.show()
 
 
@@ -51,7 +189,7 @@ if __name__ == '__main__':
 	states_list = []
 	fin_positions = open('results_posi', 'rt')
 	fin_states = open('results_stat', 'rt')
-	for pos, sta in zip(fin_positions, fin_states):
+	for i, (pos, sta) in enumerate(zip(fin_positions, fin_states)):
 		pos = re.split(',', pos)
 		sta = re.split(',', sta)
 		pos.remove(' \n')
@@ -64,10 +202,12 @@ if __name__ == '__main__':
 			sta_list += [int(s)]
 		positions_list += [pos_list]
 		states_list += [sta_list]
+		num_cell = i
 	fin_positions.close()
 	fin_states.close()
 
-	num_cell = len(positions_list[0])
+	# num_cell = len(positions_list[])
+	print('STEP = ', STEP, '細胞数 = ',num_cell)
 	# 値が0になっているところは細胞が存在しないことと同値とする
 	# 行:細胞番号　列:step数
 	positions = np.zeros((num_cell, STEP),float)
@@ -77,4 +217,7 @@ if __name__ == '__main__':
 			positions[j,i] = p
 			states[j,i] = s
 
-	dens_bins(positions,states,STEP)
+	# dens_bins(positions,states, 0, STEP)
+	# g2tog1_movement(positions, states)
+	# cell_displacement(positions)
+	# cell_movement(positions)
