@@ -222,7 +222,12 @@ def h(r, DEND):
     return GAMMA * DELTA *(1 - r[2]/DOM_Z)* (DEND - r) * np.array([1, 1, 0])
 
 
+def plot_cells(lists):
+    """when you use this function, don't foget UNcommentout figs"""
+
+
 if __name__ == '__main__':
+    # 細胞の初期状態を作成
     cells = []
     for i in range(N):
         number = random.random()
@@ -242,6 +247,7 @@ if __name__ == '__main__':
     ax = Axes3D(fig)
     t = 0
     while t < TIME:
+        # オイラー法で計算し、細胞の状態を更新
         for i in range(len(cells)):
             # euler method
             ft = f_intaract(cells) \
@@ -250,6 +256,7 @@ if __name__ == '__main__':
             cells[i].r += ft*dt
             # 細胞の状態を更新
             cells[i].calc_next(cells)
+
         # 以下plotに関する
         list1 = []
         list2 = []
@@ -318,7 +325,5 @@ if __name__ == '__main__':
         ax.set_zlabel("Z")
         ax.legend()
         plt.pause(0.001)
-        for i in range(3):
-            print(" ")
 
     plt.show()
