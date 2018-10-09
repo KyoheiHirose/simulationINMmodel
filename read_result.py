@@ -7,7 +7,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 t = np.arange(0, TIME, dt)  # 時間軸を用いる際の横軸
-samples = [1,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,99]  # 左の番号のついたものだけをグラフ上に表示
+samples = [1,5,10,15,35,40,45,50,60,65,70,75]  # 左の番号のついたものだけをグラフ上に表示
 
 
 def dens_bins(pos, sta, start, step):
@@ -164,48 +164,58 @@ def cell_displacement(pos):
 	dplace = pos - pos0
 	for i, dpla in enumerate(dplace):
 		if i in samples:
-			plt.plot(t, dpla)
+			plt.plot(t, dpla, label='cell_' + str(i))
 	plt.title('DISPLACEMENT')
 	plt.ylabel('displacement(um)')
 	plt.xlabel('time(hour)')
-	# return plt.savefig('outputs/figdisp_vphi=3')
+	plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
+	# return plt.savefig('outputs/figdisp_init')
 	return plt.show()
 
 
 def cell_movement(pos):
 	for i, p in enumerate(pos):
 		if i in samples:
-			plt.plot(t, p)
+			plt.plot(t, p, label='cell_' + str(i))
 	plt.title('MOVEMENT')
 	plt.ylabel('(um)')
 	plt.xlabel('time(hour)')
-	# return plt.savefig('outputs/figmov_vphi=3')
+	plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
+	# return plt.savefig('outputs/figmov_init')
 	return plt.show()
+
+
+def read_file(name, type):
+	"""
+	ファイルの読み込み　入力は行:時間　列:各細胞
+	:param name: file name
+	:param type: reading type; int or float in str
+	:return name_list, num: num;合計細胞数
+	"""
+	name_list =[]
+	num = 0  # 細胞数のカウンタ
+	fin_name = open(name, 'rt')
+	for i, name in enumerate(fin_name):
+		nam = re.split(',', name)
+		nam.remove(' \n')
+		nam_list = []
+		for n in nam:
+			if type == 'int':
+				nam_list += [int(n)]
+			elif type == 'float':
+				nam_list += [float(n)]
+		name_list += [nam_list]
+		num = i
+	fin_name.close()
+	return name_list, num
+
 
 
 if __name__ == '__main__':
 	STEP = int(TIME/dt)
-	positions_list = []
-	states_list = []
-	fin_positions = open('results_posi', 'rt')
-	fin_states = open('results_stat', 'rt')
-	for i, (pos, sta) in enumerate(zip(fin_positions, fin_states)):
-		pos = re.split(',', pos)
-		sta = re.split(',', sta)
-		pos.remove(' \n')
-		sta.remove(' \n')
-		num = len(pos)  # posとstaは同じサイズだから一方のみ
-		pos_list = []
-		sta_list = []
-		for p, s in zip(pos, sta):
-			pos_list += [float(p)]
-			sta_list += [int(s)]
-		positions_list += [pos_list]
-		states_list += [sta_list]
-		num_cell = i
-	fin_positions.close()
-	fin_states.close()
 
+	positions_list, num_cell = read_file('results_posi', 'float')
+	states_list, num_cell = read_file('results_stat','int')
 	# num_cell = len(positions_list[])
 	print('STEP = ', STEP, '細胞数 = ',num_cell)
 	# 値が0になっているところは細胞が存在しないことと同値とする
@@ -219,5 +229,5 @@ if __name__ == '__main__':
 
 	# dens_bins(positions,states, 0, STEP)
 	# g2tog1_movement(positions, states)
-	# cell_displacement(positions)
-	# cell_movement(positions)
+	cell_displacement(positions)
+	cell_movement(positions)
