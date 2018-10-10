@@ -6,7 +6,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-t = np.arange(0, TIME, dt)  # 時間軸を用いる際の横軸
+t = np.arange(0, 20, 0.1)  # 時間軸を用いる際の横軸
 samples = [1,5,10,15,35,40,45,50,60,65,70,75]  # 左の番号のついたものだけをグラフ上に表示
 
 
@@ -193,7 +193,6 @@ def read_file(name, type):
 	:return name_list, num: num;合計細胞数
 	"""
 	name_list =[]
-	num = 0  # 細胞数のカウンタ
 	fin_name = open(name, 'rt')
 	for i, name in enumerate(fin_name):
 		nam = re.split(',', name)
@@ -205,19 +204,18 @@ def read_file(name, type):
 			elif type == 'float':
 				nam_list += [float(n)]
 		name_list += [nam_list]
-		num = i
 	fin_name.close()
-	return name_list, num
+	return name_list
 
 
 
 if __name__ == '__main__':
-	STEP = int(TIME/dt)
 
-	positions_list, num_cell = read_file('results_posi', 'float')
-	states_list, num_cell = read_file('results_stat','int')
-	# num_cell = len(positions_list[])
-	print('STEP = ', STEP, '細胞数 = ',num_cell)
+	positions_list = read_file('results_posi', 'float')
+	states_list = read_file('results_stat','int')
+	STEP = len(positions_list)
+	num_cell = len(positions_list[-1])
+	print('STEP = ', len(positions_list), '細胞数 = ',len(positions_list[-1]))
 	# 値が0になっているところは細胞が存在しないことと同値とする
 	# 行:細胞番号　列:step数
 	positions = np.zeros((num_cell, STEP),float)

@@ -225,8 +225,8 @@ if __name__=="__main__":
             cells[i].timer = 9 * (DOM_Z - z) / DOM_Z
 
     t = 0
-    fout_posi = open('results_posi_np', 'wt')
-    fout_stat = open('results_stat_np', 'wt')
+    fout_posi = open('results_posi', 'wt')
+    fout_stat = open('results_stat', 'wt')
     while t < TIME:
         position = ''
         stats = ''
@@ -234,16 +234,20 @@ if __name__=="__main__":
         for i in range(len(cells)):
             # euler method
             f = calculate.f_intaract(cells, i)
-            ft = -1*BETA*np.array(f) \
+            fa1 = -1*BETA*np.array(f) \
                  + vphi(cells[i].r, cells[i].v, cells[i].phi, cells[i].timer2) \
                  + h(cells[i].r, cells[i].DEND)
+            fa2 = -1 * BETA * np.array(f) \
+                 + vphi(cells[i].r, cells[i].v, cells[i].phi, cells[i].timer2) \
+                 + h(cells[i].r, cells[i].DEND)
+
             cells[i].r += ft * dt
 
             # 細胞の状態を更新
             cells[i].calc_next(cells, dt)
 
             # 細胞の状態を外部ファイルに出力
-            position += str(cells[i].r[0]) + ',' + str(cells[i].r[1]) + ',' + str(cells[i].r[2]) + '/'
+            position += str(cells[i].r[2]) + ', '
             stats += str(cells[i].phi) + ', '
         position += '\n'
         stats += '\n'
