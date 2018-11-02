@@ -232,7 +232,6 @@ if __name__=="__main__":
         stats = ''
         # オイラー法で計算し、細胞の状態を更新
         for i in range(len(cells)):
-            # euler method
             f = calculate.f_intaract(cells, i)
             fa1 = -1*BETA*np.array(f) \
                  + vphi(cells[i].r, cells[i].v, cells[i].phi, cells[i].timer2) \

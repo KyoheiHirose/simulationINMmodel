@@ -8,13 +8,17 @@ import matplotlib
 from matplotlib.colors import ListedColormap
 import matplotlib.pyplot as plt
 from euler_high import dt, TIME
+import matplotlib
+matplotlib.use('Agg') # -----(1)
+from pylab import rcParams
+rcParams['figure.figsize'] = 30,20
 
 x = np.arange(0, int(TIME / dt) + 1)
 
 
 def cell_movement(posdyr):
 	for i, pdyr in enumerate(posdyr):
-		if i in [3*i for i in range(99)]:
+		if i in [i for i in range(posdyr.shape[0])]:
 			# print('now i am pdyr',i, )
 			t1=np.where(posdyr[i,:,3] != 0)[0].min()
 			for t, phi in enumerate(posdyr[i,:,3]):
@@ -92,45 +96,70 @@ def cell_displacement(posdyr):
 
 
 def cell_displacement_1to34(cells):
+	num6=0
+	num0=0
+	endphi3=0
+	endphi4=0
 	for i in range(cells.shape[0]):
 		cell = cells[i]
-		if np.where(cell[:,3]==6.)[0].shape[0]!=0:  # 分裂した細胞のみを選別
-			num6 = np.where(cell[:,3]==6.)[0][0]  # 分裂した時期を調べる
-			ind = num6+1
-			while 1:
-				try:
-					if cell[:,3][ind] == cell[:,3][ind+1]:
-						ind += 1
-					else:
-						break
-				except IndexError:
-					break
-			endphi3 = ind
-			ind = num6-1
-			startphi1 = 0
-			endphi1 = 0
-			while 1:
-				if cell[:,3][ind] == 2.:
-					ind -= 1
-				elif cell[:,3][ind]==1.:
+		if np.where(cell[:,3]==6.)[0].size>0:  # 分裂した細胞のみを選別
+			if np.where(cell[:,3]==6.)[0].size>0:
+				num6 = np.where(cell[:,3]==6.)[0][0]  # 最初の分裂した時期を調べる
+				ind = num6+1
+				while 1:
 					try:
-						if cell[:,3][ind+1]==2.:
-							endphi1 = ind
-							ind -= 1
-						elif cell[:,3][ind-1]==5.:
-							startphi1 = ind
-							break
-						elif ind == 0:
-							break
+						if cell[:,3][ind] == cell[:,3][ind+1]:
+							ind += 1
 						else:
-							ind -= 1
+							break
 					except IndexError:
 						break
-				else:
-					print('something is wrong')
-					break
+				endphi3 = ind
+				ind = num6-1
+				startphi1 = 0
+				endphi1 = 0
+				while 1:
+					if cell[:,3][ind] == 2.:
+						ind -= 1
+					elif cell[:,3][ind]==1.:
+						try:
+							if cell[:,3][ind+1]==2.:
+								endphi1 = ind
+								ind -= 1
+							elif cell[:,3][ind-1]==5.:
+								startphi1 = ind
+								break
+							elif ind == 0:
+								break
+							else:
+								ind -= 1
+						except IndexError:
+							break
+					else:
+						print('something is wrong')
+						break
+			# plt.plot(cell[num6:endphi3,2])
+
+		elif np.where(cell[:,3]==0.)[0].size>0:
+			if np.where(cell[:,2]>5.)[0].size>0:
+				num = np.where(cell[:,2]>5.)[0].min()
+				ind = num
+				while 1:
+					try:
+						if cell[:, 3][ind] == cell[:, 3][ind + 1]:
+							ind += 1
+						else:
+							break
+					except IndexError:
+						break
+				endphi4 = ind
+				plt.plot(cell[num:endphi4,2])
+			else:
+				break
 			#plt.plot(np.hstack((cell[startphi1:endphi1,2],cell[num6:endphi3,2])))
-			plt.plot(cell[num6:endphi3,2])
+	plt.xlim(0,200)
+	plt.ylim(0,35)
+	# return plt.savefig('myo0_3.png') # -----(2)
 	return plt.show()
 
 
@@ -166,30 +195,27 @@ if __name__ == '__main__':
 		for j, ce in enumerate(cell):
 			cells[j,i] = ce
 
-	print('実行時間TIME...', TIME, ', 時間幅dt...', dt, ', STEP数(TIME/dt)...', int(TIME/dt))
-	print('細胞数...', len(cells))
-
 	cells = np.array(cells) # cells[細胞番号,時刻,(0;x,1;y,2;z,3;phi)]
-	#############################経過をグラフ表示###############################
-	colors ={'S':'blue', 'G1e':'yellow', 'G2':'green', 'G1l':'orange', 'M':'deepskyblue', 'diff':'gray', 'div':'red'}
 
-	# cell_movement(cells)
+	print('実行時間TIME...', TIME, ', 時間幅dt...', dt, ', STEP数(TIME/dt)...', int(TIME/dt))
+	print('全細胞数...', cells.shape[0])
+	print('領域VZ内細胞数',np.where(cells[:,int(TIME/dt),2]<100)[0].shape[0])
+
+	#############################経過をグラフ表示###############################
+	colors ={'S':'deepskyblue', 'G1e':'magenta', 'G2':'green', 'G1l':'orange', 'M':'yellow', 'diff':'gray', 'div':'red'}
+
+	cell_movement(cells)
 	# cell_movement(cells[0,:,:3] - cells[0,0,:3])
 	# for i, cell in enumerate(cells):
-	cell = cells[17]
+	# cellhist = np.where(cells[:,190:210,3]==6)
+	# plt.hist(cellhist)
+	# plt.show()
+	print(np.where(cells[:,190:210,3]==6))
 
 	# 各binの存在する細胞期の個数を計算
 
-	print(cell[:,3])
-	cell_displacement_1to34(cells)
-	plt.show()
-
-	# num3to5_min_arr = np.where((cell[:,3]==3.))[0]  # この中でc2max以上で最小なものを探せば良い
-	# c1min = np.where(c1min_arr>c2max)
-
-	# print(cell[c2max-20:c2max+1,2])
-	# print(cell[c1min:c1min+20,2])
-	# plt.plot(cell[c2max-20:c2max+1,2], color=colors['G2'])
-	# plt.plot(cell[c1min:c1min+20,2], color=colors['G1e'])
+	# print(cells[:,100])
+	# cell_displacement_1to34(cells)
 	# plt.show()
+
 	print('this program took ', time.time()-start, 'sec')

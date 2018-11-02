@@ -18,12 +18,13 @@ BETA = 15
 GAMMA = 4
 V_INIT = 20.0
 N = 100
-TIME = 5  # 20stepで0.25secほど 400stepで17sec
+TIME = 10  # 20stepで0.25secほど 400stepで17sec
 dt = 0.01
 phi3up = 0
 phi4up = 0
-v_phi_ini3 = -1.6
-v_phi_ini4 = -1.6
+v_phi_ini3 = -1.6 + phi3up
+v_phi_ini4 = -1.6 + phi4up
+
 
 DOM_X = 20
 DOM_Y = 20
@@ -54,7 +55,7 @@ class Cell(object):
         elif self.phi == 3:
             self.phi3(dt)
         elif self.phi == 4:
-            self.phi4(dt)
+            self.phi4(dt)  # 実験的にphi4を封印
         elif self.phi == 5:
             self.phi5(dt)
         elif self.phi == 6:
@@ -81,7 +82,7 @@ class Cell(object):
 
     def phi3(self, dt):
         """ G1 phase (突起あり)"""
-        if self.r[2] < 0:
+        if self.r[2] < R/2:
             self.r[2] = R/2
         if self.timer > 0:
             self.timer -= dt
@@ -95,6 +96,8 @@ class Cell(object):
 
     def phi4(self, dt):
         """ G1 phase (突起なし) """
+        if self.r[2] < R/2:
+            self.r[2] = R/2
         if self.timer2 > 0:
             self.r[2] = R/2  # timer2がゼロになるまでapical面に固定
             self.timer2 -= dt
@@ -122,6 +125,7 @@ class Cell(object):
         rad = np.array([math.cos(theta), math.sin(theta), 0])
         cell += [copy.deepcopy(cell[i])]
         # in xy plane で位置を変更し突起なしの細胞を作る
+
         cell[-1].phi = 4
         cell[-1].r -= R/4 * rad
         cell[-1].DEND = copy.deepcopy(cell[-1].r)
