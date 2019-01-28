@@ -1,7 +1,7 @@
 
 import re
 import numpy as np
-from euler_high import dt, TIME, phi3up, phi4up
+from euler_high_init import dt, TIME, phi3up, phi4up
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt

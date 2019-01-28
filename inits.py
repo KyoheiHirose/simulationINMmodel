@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib
 from matplotlib.colors import ListedColormap
 import matplotlib.pyplot as plt
-from euler_high import dt, TIME
+from euler_high_init import dt, TIME
 
 
 def cell_movement(posdyr):

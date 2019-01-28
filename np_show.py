@@ -5,7 +5,6 @@ import re
 import time
 import numpy as np
 import matplotlib
-from matplotlib.colors import ListedColormap
 import matplotlib.pyplot as plt
 from euler_high import dt, TIME
 import matplotlib
@@ -86,7 +85,8 @@ def cell_movement(posdyr):
 					except:
 						plt.plot(x[t1:t+1], posdyr[i, t1:t+1,2], color=colors['diff'])
 	plt.grid()
-	return plt.show()
+	return plt.savefig('all_cells_.png') # -----(2)
+	# return plt.show()
 
 
 def cell_displacement(posdyr):
@@ -95,7 +95,7 @@ def cell_displacement(posdyr):
 	pass
 
 
-def cell_displacement_1to34(cells):
+def cell_displacement_1to34(cells,col,line):
 	num6=0
 	num0=0
 	endphi3=0
@@ -138,7 +138,7 @@ def cell_displacement_1to34(cells):
 					else:
 						print('something is wrong')
 						break
-			# plt.plot(cell[num6:endphi3,2])
+			plt.plot(cell[num6:endphi3,2]-5,color=col,lw=line)
 
 		elif np.where(cell[:,3]==0.)[0].size>0:
 			if np.where(cell[:,2]>5.)[0].size>0:
@@ -153,19 +153,23 @@ def cell_displacement_1to34(cells):
 					except IndexError:
 						break
 				endphi4 = ind
-				plt.plot(cell[num:endphi4,2])
+				plt.plot(cell[num:endphi4,2]-5,color=col,lw=line)
 			else:
 				break
 			#plt.plot(np.hstack((cell[startphi1:endphi1,2],cell[num6:endphi3,2])))
-	plt.xlim(0,200)
-	plt.ylim(0,35)
-	# return plt.savefig('myo0_3.png') # -----(2)
-	return plt.show()
+	plt.tick_params(labelsize=30)
+	plt.tight_layout()
+	plt.xlim(0,100)
+	plt.ylim(-1,10)
+	plt.grid()
+	return plt.savefig('ferret_89-2.png') # -----(2)
+	# return plt.show()
 
 
 if __name__ == '__main__':
-
+	print('np_show.py started!!')
 	start = time.time()
+
 	fin_position = open('results_posi_np', 'rt')
 	fin_state = open('results_stat_np', 'rt')
 
@@ -197,25 +201,55 @@ if __name__ == '__main__':
 
 	cells = np.array(cells) # cells[細胞番号,時刻,(0;x,1;y,2;z,3;phi)]
 
+	fin_position = open('results_posi_np_V', 'rt')
+	fin_state = open('results_stat_np_V', 'rt')
+
+	cells_list = []
+	phi = []
+	ind, col = 0, 0
+	for i, (position, state) in enumerate(zip(fin_position, fin_state)):
+		pos = re.split('/', position)
+		pos.remove('\n')
+		pos1 = []
+		for p in pos:
+			p = re.split(',', p)
+			pos1 += [p]
+		pos = pos1
+		sta = re.split(',', state)
+		sta.remove(' \n')
+
+		pos_list = []
+		for j, (p, s) in enumerate(zip(pos, sta)):
+			pos_list += [[float(p[0]), float(p[1]), float(p[2]), float(s)]]
+			col = j
+		cells_list.append(pos_list)
+		ind = i
+	fin_position.close()
+	cellsV = np.zeros((col + 1, ind + 1, 4))
+	for i, cell in enumerate(cells_list):
+		for j, ce in enumerate(cell):
+			cellsV[j, i] = ce
+
+	cellsV = np.array(cellsV)  # cells[細胞番号,時刻,(0;x,1;y,2;z,3;phi)]
+
 	print('実行時間TIME...', TIME, ', 時間幅dt...', dt, ', STEP数(TIME/dt)...', int(TIME/dt))
 	print('全細胞数...', cells.shape[0])
-	print('領域VZ内細胞数',np.where(cells[:,int(TIME/dt),2]<100)[0].shape[0])
+	print('領域VZ内細胞数',np.where(cells[:,int(TIME/dt-1),2]<100)[0].shape[0])
 
 	#############################経過をグラフ表示###############################
 	colors ={'S':'deepskyblue', 'G1e':'magenta', 'G2':'green', 'G1l':'orange', 'M':'yellow', 'diff':'gray', 'div':'red'}
 
-	cell_movement(cells)
-	# cell_movement(cells[0,:,:3] - cells[0,0,:3])
-	# for i, cell in enumerate(cells):
-	# cellhist = np.where(cells[:,190:210,3]==6)
-	# plt.hist(cellhist)
-	# plt.show()
-	print(np.where(cells[:,190:210,3]==6))
+	# cell_movement(cells)
+	cell_displacement_1to34(cells,'red',2)
+	cell_displacement_1to34(cellsV,'blue',8)
+	plt.legend()
+	plt.tick_params(labelsize=30)
+	plt.tight_layout()
+	plt.xlim(0,100)
+	# plt.ylim(-1,)
+	plt.grid()
+	plt.show()
 
-	# 各binの存在する細胞期の個数を計算
 
-	# print(cells[:,100])
-	# cell_displacement_1to34(cells)
-	# plt.show()
 
 	print('this program took ', time.time()-start, 'sec')

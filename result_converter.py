@@ -1,42 +1,44 @@
 import time
 import re
 import numpy as np
-from euler_high import dt, TIME
+import random
+from euler_high_init import dt, TIME
 
 if __name__ == '__main__':
 
 	start = time.time()
-	fin_position = open('results_posi_np', 'rt')
-	fin_state = open('results_stat_np', 'rt')
-
-	cells_list = []
-	phi = []
+	f_position = open('final.dat', 'rt')
+	#final.dat...細胞体の位置x,y,z,軸の位置x,y,z,phi,timer,v
+	cells = []
 	ind, col = 0, 0
-	for i, (position, state) in enumerate(zip(fin_position, fin_state)):
-		pos = re.split('/', position)
-		pos.remove('\n')
-		pos1 =[]
-		for p in pos:
-			p = re.split(',', p)
-			pos1 += [p]
-		pos = pos1
-		sta = re.split(',', state)
-		sta.remove(' \n')
-
-		pos_list = []
-		for j, (p, s) in enumerate(zip(pos, sta)):
-			pos_list += [[float(p[0]), float(p[1]), float(p[2]), float(s)]]
-			col = j
-		cells_list.append(pos_list)
-		ind = i
-	fin_position.close()
-	cells = np.zeros((col+1, ind+1,4))
-	for i, cell in enumerate(cells_list):
-		for j, ce in enumerate(cell):
-			cells[j,i] = ce
-
-	print('実行時間TIME...', TIME, ', 時間幅dt...', dt, ', STEP数(TIME/dt)...', int(TIME/dt))
-	print('細胞数...', len(cells))
-
-	cells = np.array(cells) # cells[細胞番号,時刻,(0;x,1;y,2;z,3;phi)]
-	print(cells[1])
+	for i, position in enumerate(f_position):
+		print(position)
+		pos = re.split(' ', position)
+		for i, p in enumerate(pos):
+			if i != 6:
+				try:
+					pos[i] = float(p)
+				except:
+					p = p[:-1]
+					pos[i] = float(p)
+			else:
+				p = int(p)
+				if p == 1 or p == 10:
+					pos[i] = int(1)
+				elif p == 3 or p == 30:
+					pos[i] = int(3)
+				elif p == 5:
+					pos[i] = int(1)
+				elif p == 6:
+					pos[i] = int(5)
+				elif p == 7 or p == 70:
+					n = random.random()
+					if n <0.5:
+						pos[i] = int(3)
+					else:
+						pos[i] = int(4)
+				elif p == 8 or p == 9:
+					pos[i] = int(7)
+		cells += [pos]
+	f_position.close()
+	print(len(cells))
